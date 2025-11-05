@@ -1,0 +1,82 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%----------------------------------------------------------------------------------
+% DO NOT Change this is the required setting A4 page, 11pt, onside
+% print, book style
+%%----------------------------------------------------------------------------------
+\documentclass[a4paper,11pt,oneside]{book}
+\usepackage{CS_report} % DO NOT REMOVE THIS LINE.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\captionsetup[figure]{margin=1.5cm,font=small,name={Figura},labelsep=colon}
+\captionsetup[table]{margin=1.5cm,font=small,name={Tabela},labelsep=colon}
+
+\frontmatter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{titlepage}
+  \begin{center}
+    \includegraphics[width=3cm]{figures/ufrnlogo.png}\\[0.5cm]
+    {\LARGE Universidade Federal do Rio Grande do Norte\\[0.5cm]
+    Departamento de Informática e Matemática Aplicada}\\[2cm]
+
+    \linespread{1.2}\huge {
+      Relatório da $2^a$ Unidade - Grafos
+
+    }
+    \linespread{1}~\\[2cm]
+    % {\color{blue} \rule{\textwidth}{1pt}}
+    {\Large
+      Alexandre Dantas, Andriel Vinicius, Gabriel Carvalho, Maria Paz
+      e Vinicius de Lima
+    }\\[1cm]
+
+    {\large \emph{Professor:} Matheus Menezes}\\[1cm]
+
+    {\Large \today}
+  \end{center}
+\end{titlepage}
+
+% -------------------------------------------------------------------
+% Contents, list of figures, list of tables
+% -------------------------------------------------------------------
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                                                    %%
+%%  Main chapters and sections of your project                        %%
+%%  Everything from here on needs updates in your own words and works %%
+%%                                                                    %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\mainmatter
+% Read for preparation of document in LaTex
+% Lamport, L. (1986), LATEX: A Document Preparation System, Addison-Wesley.
+
+\input{chapters/01_introducao}
+\input{chapters/02_revisao_teorica} %
+\input{chapters/03_representacoes}
+\input{chapters/04_pseudocodigo}
+\input{chapters/05_discussion}
+\input{chapters/06_testes}
+\input{chapters/07_conclusão}
+
+% -------------------------------------------------------------------
+% Bibliography/References  -  Harvard Style was used in this report
+% -------------------------------------------------------------------
+\bibliography{references}  %  Patashnik, O. (1988), BibTEXing.
+% Documentation for general BibTEX users.
+
+% -------------------------------------------------------------------
+% Appendices
+% -------------------------------------------------------------------
+
+\begin{appendices}
+  \input{chapters/appendix_A.tex}
+\end{appendices}
+
+\end{document}
