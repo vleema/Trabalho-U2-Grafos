@@ -133,6 +133,13 @@ where
     {
         DfsEdgesIter::new(self, start)
     }
+
+    fn shortest_path_dijkstra(&self, start: T) -> DijkstraIter<'_, T, Self>
+    where
+        Self: Sized,
+    {
+        DijkstraIter::new(self, start)
+    }
 }
 
 /// Trait defining operations for **undirected graphs**.
@@ -608,11 +615,10 @@ where
 {
     graph: &'a G,
     visited: HashSet<T>,
-    distance: HashSet<(T, i32)>,
+    distance: HashMap<T, i32>,
     parent: HashMap<T, Option<T>>,
 }
 
-/*
 impl<'a, T, G> DijkstraIter<'a, T, G>
 where
     T: Node,
@@ -620,26 +626,24 @@ where
 {
     fn new(graph: &'a G, start: T) -> Self {
         let mut visited: HashSet<T> = HashSet::new();
-        let mut distance: HashSet<(T, i32)> = HashSet::new();
+        let mut distance: HashMap<T, i32> = HashMap::new();
         let mut parent: HashMap<T, Option<T>> = HashMap::new();
         visited.insert(start);
-        distance.insert((start, 0));
+        distance.insert(start, 0);
         parent.insert(start, None);
 
-        if let Some(neighbors) = graph.neighbors(start) {
+        if let Some(neighbors) = graph.weighted_neighbors(start) {
             for neighbor in neighbors {
-                neighbor.
-                parent.insert(neighbor, Some(start));
-                distance.insert((neighbor, );
+                parent.insert(neighbor.0, Some(start));
+                distance.insert(neighbor.0, neighbor.1);
             }
-
         }
 
         Self {
             graph,
-            visited: HashSet::new(),
-            distance: HashSet::new(),
-            parent: HashMap::new(),
+            visited,
+            distance,
+            parent,
         }
     }
 }
@@ -649,17 +653,122 @@ where
     T: Node,
     G: Graph<T>,
 {
-    // TODO: maybe add some DijkstraEvent? Dont know..
     type Item = ();
 
     fn next(&mut self) -> Option<Self::Item> {
-        None
+        let mut unvisited_node: Option<(T, i32)> = None;
+
+        // Enquanto houver vértice não visitado continua
+        for (_, node) in self.graph.nodes().enumerate() {
+            if !self.visited.contains(&node) {
+                if let Some(distance) = self.distance.get(&node) {
+                    if unvisited_node.is_none()
+                        || (unvisited_node.is_some() && distance < &unvisited_node.unwrap().1)
+                    {
+                        unvisited_node = Some((node, *distance));
+                    }
+                }
+            }
+        }
+
+        match unvisited_node {
+            None => (),
+            Some((node, node_weight)) => {
+                self.visited.insert(node);
+                if let Some(neighbors) = self.graph.weighted_neighbors(node) {
+                    for (neighbor, neighbor_weight) in neighbors {
+                        let node_distance = self.distance.get(&node).unwrap();
+                        if !self.visited.contains(&neighbor)
+                            && neighbor_weight > node_weight + node_distance
+                        {
+                            self.distance.insert(neighbor, node_weight + node_distance);
+                            //neighbor.1 = node_weight + node_distance;
+                        }
+                    }
+                }
+            }
+        }
+        Some(())
     }
 }
-*/
+
 #[cfg(test)]
 mod test {
-    use crate::{DfsEvent, Graph, UndirectedGraph, graphs::AdjacencyList};
+    use crate::{DfsEvent, Graph, UndirectedGraph, graphs::AdjacencyList, graphs::AdjacencyMatrix};
+
+    #[test]
+    fn dijkstra_class() {
+        let map: HashMap<usize, HashSet<(usize, i32)>> = HashMap::new();
+        let set1: HashSet<(usize, i32)> = HashSet::new();
+        set1.insert((1, 0));
+        set1.insert((2, 2));
+        set1.insert((3, 4));
+        set1.insert((4, 5));
+        set1.insert((5, 0));
+        set1.insert((6, 0));
+        set1.insert((7, 0));
+        let set2: HashSet<(usize, i32)> = HashSet::new();
+        set2.insert((1, 2));
+        set2.insert((2, 0));
+        set2.insert((3, 0));
+        set2.insert((4, 2));
+        set2.insert((5, 0));
+        set2.insert((6, 0));
+        set2.insert((7, 0));
+        let set3: HashSet<(usize, i32)> = HashSet::new();
+        set3.insert((1, 4));
+        set3.insert((2, 0));
+        set3.insert((3, 0));
+        set3.insert((4, 1));
+        set3.insert((5, 0));
+        set3.insert((6, 4));
+        set3.insert((7, 0));
+        let set4: HashSet<(usize, i32)> = HashSet::new();
+        set4.insert((1, 5));
+        set4.insert((2, 2));
+        set4.insert((3, 1));
+        set4.insert((4, 0));
+        set4.insert((5, 2));
+        set4.insert((6, 3));
+        set4.insert((7, 0));
+        let set5: HashSet<(usize, i32)> = HashSet::new();
+        set5.insert((1, 0));
+        set5.insert((2, 0));
+        set5.insert((3, 0));
+        set5.insert((4, 2));
+        set5.insert((5, 0));
+        set5.insert((6, 1));
+        set5.insert((7, 5));
+        let set6: HashSet<(usize, i32)> = HashSet::new();
+        set6.insert((1, 0));
+        set6.insert((2, 0));
+        set6.insert((3, 4));
+        set6.insert((4, 3));
+        set6.insert((5, 1));
+        set6.insert((6, 0));
+        set6.insert((7, 7));
+        let set7: HashSet<(usize, i32)> = HashSet::new();
+        set7.insert((1, 0));
+        set7.insert((2, 0));
+        set7.insert((3, 0));
+        set7.insert((4, 0));
+        set7.insert((5, 5));
+        set7.insert((6, 7));
+        set7.insert((7, 0));
+
+        map.insert(1, set1);
+        map.insert(2, set2);
+        map.insert(3, set3);
+        map.insert(4, set4);
+        map.insert(5, set5);
+        map.insert(6, set6);
+        map.insert(7, set7);
+
+        let mut g: UndirectedGraph<usize> = AdjacencyMatrix(map);
+        for iter in g.shortest_path_dijkstra(0).next() {
+            println!("{:?}", iter);
+        }
+    }
 
     #[test]
     fn dfs_with_cycle() {
