@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::fmt::{Debug, Display};
+use std::fmt::Debug;
 use std::hash::Hash;
 
 /// Defines a generic interface for a graph data structure.
@@ -14,7 +14,12 @@ use std::hash::Hash;
 /// # Type Parameters
 /// - `Node`: The type used to represent graph nodes.
 ///   Must implement [`Eq`], [`Hash`], and [`Copy`] to ensure efficient lookups.
-pub trait Graph<Node: Eq + Hash + Copy>: Default {
+
+pub trait Node: Eq + Hash + Copy {}
+pub trait Graph<T>
+where
+    T: Node,
+{
     /// Returns the number of nodes (vertices) in the graph.
     fn order(&self) -> usize;
 
@@ -33,44 +38,44 @@ pub trait Graph<Node: Eq + Hash + Copy>: Default {
     /// A tuple `(usize, usize)` where:
     /// - The first element is the number of **incoming** edges.
     /// - The second element is the number of **outgoing** edges.
-    fn node_degrees(&self, n: Node) -> (usize, usize);
+    fn node_degrees(&self, n: T) -> (usize, usize);
 
     /// Returns an iterator over all nodes in the graph.
     ///
     /// The iterator yields each node exactly once.
-    fn nodes(&self) -> impl Iterator<Item = Node>;
+    fn nodes(&self) -> impl Iterator<Item = T>;
 
     /// Adds a new node to the graph.
     ///
     /// If the node already exists, this operation has no effect.
-    fn add_node(&mut self, n: Node);
+    fn add_node(&mut self, n: T);
 
     /// Removes a node and all edges connected to it.
     ///
     /// If the node does not exist, this operation has no effect.
-    fn remove_node(&mut self, n: Node);
+    fn remove_node(&mut self, n: T);
 
     /// Adds a **directed edge** from node `n` to node `m`.
     ///
     /// If either node does not exist, this operation has no effect.
-    fn add_edge(&mut self, n: Node, m: Node);
+    fn add_edge(&mut self, n: T, m: T);
 
     /// Removes a **directed edge** from node `n` to node `m`, if it exists.
     ///
     /// If either node does not exist, this operation has no effect.
-    fn remove_edge(&mut self, n: Node, m: Node);
+    fn remove_edge(&mut self, n: T, m: T);
 
-    /// The associated iterator type for the neighbors of a given node.
-    type Neighbors<'a>: Iterator<Item = Node>
+    // Comentado para simplificar
+    type Neighbors<'a>: Iterator<Item = T>
     where
         Self: 'a,
-        Node: 'a;
+        T: 'a;
 
     /// Returns an iterator over all **neighbors** (adjacent nodes) of a given node.
     ///
     /// # Arguments
     /// * `n` — The node whose outgoing neighbors are to be listed.
-    fn neighbors<'a>(&'a self, n: Node) -> Self::Neighbors<'a>;
+    fn neighbors<'a>(&'a self, n: T) -> Option<Self::Neighbors<'a>>;
 
     /// Checks whether the graph is **bipartite** and returns `true` or `false`
     fn bipartite(&self) -> bool;
@@ -81,14 +86,18 @@ pub trait Graph<Node: Eq + Hash + Copy>: Default {
     fn underlying_graph(&self) -> Self;
 
     /// Returns `true` if there is a directed edge from node `n` to node `m`.
-    fn has_edge(&self, n: Node, m: Node) -> bool {
-        self.neighbors(n).any(|neighbor| neighbor == m)
+    fn has_edge(&self, n: T, m: T) -> bool {
+        if let Some(mut neighbors) = self.neighbors(n) {
+            neighbors.any(|neighbor| neighbor == m)
+        } else {
+            false
+        }
     }
 
     /// Returns an iterator that performs a **depth-first search (DFS)** starting from `start`.
     ///
     /// The iterator yields [`DfsEvent`] values that represent the traversal steps.
-    fn dfs(&self, start: Node) -> DfsIter<'_, Node, Self>
+    fn dfs(&self, start: T) -> DfsIter<'_, T, Self>
     where
         Self: Sized,
     {
@@ -98,7 +107,7 @@ pub trait Graph<Node: Eq + Hash + Copy>: Default {
     /// Returns an iterator that performs a **breadth-first search (BFS)** starting from `start`.
     ///
     /// The iterator yields [`BfsEvent`] values for each level of the search.
-    fn bfs(&self, start: Node) -> BfsIter<'_, Node, Self>
+    fn bfs(&self, start: T) -> BfsIter<'_, T, Self>
     where
         Self: Sized,
     {
@@ -108,7 +117,7 @@ pub trait Graph<Node: Eq + Hash + Copy>: Default {
     /// Returns an iterator that classifies all edges encountered during a DFS traversal.
     ///
     /// The classification follows standard DFS rules, producing edges of type ['Edge']
-    fn classify_edges(&self, start: Node) -> DfsEdgesIter<'_, Node, Self>
+    fn classify_edges(&self, start: T) -> DfsEdgesIter<'_, T, Self>
     where
         Self: Sized,
     {
@@ -121,7 +130,10 @@ pub trait Graph<Node: Eq + Hash + Copy>: Default {
 /// Extends [`Graph`], treating each edge as a bidirectional connection `(n <-> m)`.
 /// Provides utility methods for manipulation and analysis of undirected graphs,
 /// including connectivity checks, biconnected components, and edge classification.
-pub trait UndirectedGraph<Node: Copy + Eq + Hash>: Graph<Node> {
+pub trait UndirectedGraph<T>: Graph<T>
+where
+    T: Node,
+{
     /// Returns the total number of **undirected edges** in the graph.
     fn undirected_size(&self) -> usize;
 
@@ -133,7 +145,7 @@ pub trait UndirectedGraph<Node: Copy + Eq + Hash>: Graph<Node> {
     /// Returns an iterator over the **biconnected components** of the graph.
     ///
     /// The traversal starts from the given `start` node.
-    fn biconnected_components(&self, start: Node) -> BiconnectedComponentsIter<'_, Node, Self>
+    fn biconnected_components(&self, start: T) -> BiconnectedComponentsIter<'_, T, Self>
     where
         Self: Sized,
     {
@@ -143,7 +155,7 @@ pub trait UndirectedGraph<Node: Copy + Eq + Hash>: Graph<Node> {
     /// Adds an **undirected edge** `(n <-> m)` to the graph.
     ///
     /// Internally, this adds both directed edges `(n -> m)` and `(m -> n)`.
-    fn add_undirected_edge(&mut self, n: Node, m: Node) {
+    fn add_undirected_edge(&mut self, n: T, m: T) {
         self.add_edge(n, m);
         self.add_edge(m, n);
     }
@@ -151,25 +163,28 @@ pub trait UndirectedGraph<Node: Copy + Eq + Hash>: Graph<Node> {
     /// Removes an **undirected edge** `(n <-> m)` from the graph.
     ///
     /// Internally, this removes both directed edges `(n <-> m)` and `(m <-> n)`.
-    fn remove_undirected_edge(&mut self, n: Node, m: Node) {
+    fn remove_undirected_edge(&mut self, n: T, m: T) {
         self.remove_edge(n, m);
         self.remove_edge(m, n);
     }
 
     /// Returns the **degree** of the given node,
     /// considering all undirected connections.
-    fn undirected_node_degree(&self, n: Node) -> usize {
-        self.neighbors(n).count()
+    fn undirected_node_degree(&self, n: T) -> usize {
+        match self.neighbors(n) {
+            None => 0,
+            Some(neighbor) => neighbor.count(),
+        }
     }
 
     /// Returns an iterator classifying the **undirected edges** of the graph.
     ///
     /// Only edges of types [`Edge::Tree`] and [`Edge::Back`] are considered,
     /// as these represent meaningful relations in undirected graphs.
-    fn classify_undirected_edges<'a>(&'a self, start: Node) -> impl Iterator<Item = Edge<Node>>
+    fn classify_undirected_edges<'a>(&'a self, start: T) -> impl Iterator<Item = Edge<T>>
     where
         Self: Sized,
-        Node: 'a,
+        T: 'a,
     {
         DfsEdgesIter::new(self, start)
             .filter(|edge| matches!(edge, Edge::Tree(_, _) | Edge::Back(_, _)))
@@ -189,34 +204,37 @@ pub trait UndirectedGraph<Node: Copy + Eq + Hash>: Graph<Node> {
 /// - `NonTreeEdge(Node, Node)`: Indicates that a non-tree edge (back, forward, or cross edge) is found
 ///   from the first node to the second node.
 #[derive(Debug)]
-pub enum DfsEvent<Node> {
-    Discover(Node, Option<Node>),
-    Finish(Node),
-    NonTreeEdge(Node, Node),
+pub enum DfsEvent<T>
+where
+    T: Node,
+{
+    Discover(T, Option<T>),
+    Finish(T),
+    NonTreeEdge(T, T),
 }
 
 /// Represents a iterator over a depth-first-search (DFS) traversal.
 ///
 /// The iteration yields a `DfsEvent<Node>` over each instance of `next`.
-pub struct DfsIter<'a, Node, G>
+pub struct DfsIter<'a, T, G>
 where
-    G: Graph<Node>,
-    Node: Eq + Hash + Copy,
+    G: Graph<T>,
+    T: Node,
     Self: 'a,
 {
     graph: &'a G,
-    stack: Vec<(Node, G::Neighbors<'a>)>,
-    visited: HashSet<Node>,
-    start_node: Option<Node>,
+    stack: Vec<(T, G::Neighbors<'a>)>,
+    visited: HashSet<T>,
+    start_node: Option<T>,
 }
 
-impl<'a, Node, G> DfsIter<'a, Node, G>
+impl<'a, T, G> DfsIter<'a, T, G>
 where
-    Node: Eq + Hash + Copy,
-    G: Graph<Node>,
+    T: Node,
+    G: Graph<T>,
 {
     /// Creates a new DFS iterator starting from the given node.
-    fn new(graph: &'a G, start: Node) -> Self {
+    fn new(graph: &'a G, start: T) -> Self {
         Self {
             graph,
             stack: vec![],
@@ -229,24 +247,26 @@ where
     ///
     /// This enables starting another DFS while maintains the inner parts of the iterator
     /// initialized, like the `visited` dictionary.
-    pub fn new_start(&mut self, start: Node) {
+    pub fn new_start(&mut self, start: T) {
         self.start_node = Some(start)
     }
 }
 
-impl<'a, Node, G> Iterator for DfsIter<'a, Node, G>
+impl<'a, T, G> Iterator for DfsIter<'a, T, G>
 where
-    Node: Eq + Hash + Copy,
-    G: Graph<Node>,
+    T: Node,
+    G: Graph<T>,
 {
-    type Item = DfsEvent<Node>;
+    type Item = DfsEvent<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(start_node) = self.start_node.take()
             && self.visited.insert(start_node)
         {
             self.stack
-                .push((start_node, self.graph.neighbors(start_node)));
+                .push((start_node, self.graph.neighbors(start_node).unwrap())); // TODO: remove
+            // unwrap later
+
             return Some(DfsEvent::Discover(start_node, None));
         }
 
@@ -255,7 +275,8 @@ where
                 self.stack.push((node, neighbors));
 
                 if self.visited.insert(neighbor) {
-                    self.stack.push((neighbor, self.graph.neighbors(neighbor)));
+                    self.stack
+                        .push((neighbor, self.graph.neighbors(neighbor).unwrap()));
                     return Some(DfsEvent::Discover(neighbor, Some(node)));
                 } else {
                     return Some(DfsEvent::NonTreeEdge(node, neighbor));
@@ -280,32 +301,38 @@ where
 ///   The `Vec<Node>` represents the node's neighbors that will be explored on BFS tree.
 /// - `CrossEdge(Node, Node)`: Indicates that a node has an edge to another and neither is an ancestor of the other.
 #[derive(Debug)]
-pub enum BfsEvent<Node> {
-    Discover(Node, Vec<Node>),
-    CrossEdge(Node, Node),
+pub enum BfsEvent<T>
+where
+    T: Node,
+{
+    Discover(T, Vec<T>),
+    CrossEdge(T, T),
 }
 
 /// Represents a iterator over a breadth-first-search (BFS) traversal.
 ///
 /// The iteration yields a `BfsEvent<Node>` over each instance of `next`.
-pub struct BfsIter<'a, Node, G> {
+pub struct BfsIter<'a, T, G>
+where
+    T: Node,
+{
     graph: &'a G,
-    queue: VecDeque<Node>,
-    visited: HashSet<Node>,
-    parent: HashMap<Node, Option<Node>>,
+    queue: VecDeque<T>,
+    visited: HashSet<T>,
+    parent: HashMap<T, Option<T>>,
 }
 
-impl<'a, Node, G> BfsIter<'a, Node, G>
+impl<'a, T, G> BfsIter<'a, T, G>
 where
-    Node: Eq + Hash + Copy,
-    G: Graph<Node>,
+    T: Node,
+    G: Graph<T>,
 {
     /// Creates a new BFS iterator starting from the given node.
-    fn new(graph: &'a G, start: Node) -> Self {
+    fn new(graph: &'a G, start: T) -> Self {
         let mut visited = HashSet::with_capacity(graph.order());
         visited.insert(start);
 
-        let mut parent: HashMap<Node, Option<Node>> = HashMap::with_capacity(graph.order());
+        let mut parent: HashMap<T, Option<T>> = HashMap::with_capacity(graph.order());
         parent.insert(start, None);
 
         Self {
@@ -317,25 +344,30 @@ where
     }
 }
 
-impl<'a, Node, G> Iterator for BfsIter<'a, Node, G>
+impl<'a, T, G> Iterator for BfsIter<'a, T, G>
 where
-    Node: Eq + Hash + Copy + Display,
-    G: Graph<Node>,
+    T: Node,
+    G: Graph<T>,
 {
-    type Item = Vec<BfsEvent<Node>>;
+    type Item = Vec<BfsEvent<T>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let node = self.queue.pop_front()?;
-        let mut children: Vec<Node> = Vec::new();
-        let mut events: Vec<BfsEvent<Node>> = Vec::new();
+        let mut children: Vec<T> = Vec::new();
+        let mut events: Vec<BfsEvent<T>> = Vec::new();
 
-        for neighbor in self.graph.neighbors(node) {
-            if self.visited.insert(neighbor) {
-                self.queue.push_back(neighbor);
-                self.parent.insert(neighbor, Some(node));
-                children.push(neighbor);
-            } else if Some(node) != self.parent.get(&neighbor).copied().flatten() {
-                events.push(BfsEvent::CrossEdge(node, neighbor));
+        match self.graph.neighbors(node) {
+            None => {}
+            Some(neighbors) => {
+                for n in neighbors {
+                    if self.visited.insert(n) {
+                        self.queue.push_back(n);
+                        self.parent.insert(n, Some(node));
+                        children.push(n);
+                    } else if Some(node) != self.parent.get(&n).copied().flatten() {
+                        events.push(BfsEvent::CrossEdge(node, n));
+                    }
+                }
             }
         }
 
@@ -358,12 +390,15 @@ where
 /// - `Forward(u, v)`: An edge from a node `u` to its descendant `v` that is not a tree edge.
 /// - `Cross(u, v)`: An edge between two nodes `u` and `v` such that neither is an ancestor of the other.
 #[derive(Debug)]
-pub enum Edge<Node> {
-    Tree(Node, Node),
-    Back(Node, Node),
-    ParentBack(Node, Node),
-    Forward(Node, Node),
-    Cross(Node, Node),
+pub enum Edge<T>
+where
+    T: Node,
+{
+    Tree(T, T),
+    Back(T, T),
+    ParentBack(T, T),
+    Forward(T, T),
+    Cross(T, T),
 }
 
 /// An iterator that performs a depth-first search (DFS) and classifies the edges of the graph.
@@ -371,27 +406,27 @@ pub enum Edge<Node> {
 /// This iterator wraps a `DfsIter` and uses its events to classify each edge of the
 /// graph into one of the categories defined by the `Edge` enum. It yields an `Edge<Node>`
 /// for each edge encountered during the traversal.
-pub struct DfsEdgesIter<'a, Node, G>
+pub struct DfsEdgesIter<'a, T, G>
 where
-    G: Graph<Node>,
-    Node: Eq + Hash + Copy,
+    T: Node,
+    G: Graph<T>,
     Self: 'a,
 {
-    iter: DfsIter<'a, Node, G>,
+    iter: DfsIter<'a, T, G>,
     time: usize,
-    discovery: HashMap<Node, usize>,
-    finish: HashMap<Node, usize>,
-    parent: HashMap<Node, Node>,
-    stack_hash: HashSet<Node>,
+    discovery: HashMap<T, usize>,
+    finish: HashMap<T, usize>,
+    parent: HashMap<T, T>,
+    stack_hash: HashSet<T>,
 }
 
-impl<'a, Node, G> DfsEdgesIter<'a, Node, G>
+impl<'a, T, G> DfsEdgesIter<'a, T, G>
 where
-    Node: Eq + Hash + Copy,
-    G: Graph<Node>,
+    T: Node,
+    G: Graph<T>,
 {
     /// Creates a new DFS-with-edges iterator starting from the given node.
-    fn new(graph: &'a G, start: Node) -> Self {
+    fn new(graph: &'a G, start: T) -> Self {
         Self {
             iter: DfsIter::new(graph, start),
             time: 0,
@@ -405,17 +440,17 @@ where
     /// Sets the `start_node` field of the inner `DfsIter` manually.
     ///
     /// This enables classifying edges from another components of a graph.
-    pub fn new_start(&mut self, start: Node) {
+    pub fn new_start(&mut self, start: T) {
         self.iter.new_start(start);
     }
 }
 
-impl<'a, Node, G> Iterator for DfsEdgesIter<'a, Node, G>
+impl<'a, T, G> Iterator for DfsEdgesIter<'a, T, G>
 where
-    Node: Eq + Hash + Copy,
-    G: Graph<Node>,
+    T: Node,
+    G: Graph<T>,
 {
-    type Item = Edge<Node>;
+    type Item = Edge<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(event) = self.iter.next() {
@@ -465,27 +500,27 @@ where
 ///
 /// The iterator identifies the biconnected components during a depth-first-search (DFS) that's
 /// made by a inner iterator, a `DfsIter`.
-pub struct BiconnectedComponentsIter<'a, Node, G>
+pub struct BiconnectedComponentsIter<'a, T, G>
 where
-    G: Graph<Node>,
-    Node: Eq + Hash + Copy,
+    T: Node,
+    G: Graph<T>,
     Self: 'a,
 {
-    iter: DfsIter<'a, Node, G>,
+    iter: DfsIter<'a, T, G>,
     time: usize,
-    discovery: HashMap<Node, usize>,
-    lowpt: HashMap<Node, usize>,
-    parents: HashMap<Node, Node>,
-    edge_stack: Vec<(Node, Node)>,
+    discovery: HashMap<T, usize>,
+    lowpt: HashMap<T, usize>,
+    parents: HashMap<T, T>,
+    edge_stack: Vec<(T, T)>,
 }
 
-impl<'a, Node, G> BiconnectedComponentsIter<'a, Node, G>
+impl<'a, T, G> BiconnectedComponentsIter<'a, T, G>
 where
-    G: Graph<Node> + 'a,
-    Node: Eq + Hash + Copy + 'a,
+    T: Node,
+    G: Graph<T> + 'a,
 {
     /// Creates a new iterator over the biconnected components of an undirected graph
-    fn new(graph: &'a G, start: Node) -> Self {
+    fn new(graph: &'a G, start: T) -> Self {
         Self {
             iter: graph.dfs(start),
             time: 0,
@@ -497,7 +532,7 @@ where
     }
 
     /// Extracts a biconnected component from the edge stack.
-    fn extract_component(&mut self, u: Node, v: Node) -> Option<Vec<(Node, Node)>> {
+    fn extract_component(&mut self, u: T, v: T) -> Option<Vec<(T, T)>> {
         let mut component = Vec::new();
         while let Some(edge) = self.edge_stack.pop() {
             component.push(edge);
@@ -509,12 +544,12 @@ where
     }
 }
 
-impl<'a, Node, G> Iterator for BiconnectedComponentsIter<'a, Node, G>
+impl<'a, T, G> Iterator for BiconnectedComponentsIter<'a, T, G>
 where
-    G: Graph<Node>,
-    Node: Eq + Hash + Copy + Display,
+    T: Node,
+    G: Graph<T>,
 {
-    type Item = Vec<(Node, Node)>;
+    type Item = Vec<(T, T)>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(event) = self.iter.next() {

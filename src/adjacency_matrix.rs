@@ -1,54 +1,51 @@
-use crate::graphs::{AdjacencyList};
+use crate::graph::Node;
 use crate::{Graph, UndirectedGraph};
+use std::collections::{HashMap, HashSet};
 
-/// Represents a graph using an adjacency matrix.
-/// Each row corresponds to a node, and each cell of it contains 0 or 1,
-/// indicating whether an edge exists between the row's node and the column's node.
+/// Representa um grafo usando uma matriz de adjacência.
+/// A matriz é implementada como um *map*, onde cada chave
+/// guarda um nó e o valor é um conjunto de arestas.
+/// Cada elemento do conjunto é uma dupla: 1º elemento indica
+/// o vértice adjacente e o 2º elemento o peso da aresta.
 #[derive(Debug, Clone, Default)]
-pub struct AdjacencyMatrix(pub Vec<Vec<usize>>);
+pub struct AdjacencyMatrix<T>(pub HashMap<T, HashSet<(T, i32)>>)
+where
+    T: Node;
 
-impl AdjacencyMatrix {
-    /// Converts an adjacency list into an adjacency matrix.
-    ///
-    /// # Arguments
-    /// * `list` - Reference to the adjacency list.
-    pub fn from_adjacency_list(list: &AdjacencyList) -> Self {
-        let n = list.0.len();
-        let mut adjacency_matrix: Vec<Vec<usize>> = vec![vec![0; n]; n];
-
-        for (i, neighbors) in list.0.iter().enumerate() {
-            for &j in neighbors {
-                adjacency_matrix[i][j] = 1;
-            }
-        }
-        AdjacencyMatrix(adjacency_matrix)
-    }
-}
-
-impl Graph<usize> for AdjacencyMatrix {
+impl<T> Graph<T> for AdjacencyMatrix<T>
+where
+    T: Node,
+{
     fn order(&self) -> usize {
         self.0.len()
     }
 
     fn size(&self) -> usize {
-        self.0
+        todo!()
+        /*self.0
             .iter()
             .enumerate()
             .map(|(i, _)| self.neighbors(i).count())
             .sum()
+        */
     }
 
-    fn node_degrees(&self, n: usize) -> (usize, usize) {
+    fn node_degrees(&self, _n: T) -> (usize, usize) {
+        todo!()
+        /*
         let out_deg = self.0[n].iter().filter(|&&v| v != 0).count();
         let in_deg = self.0.iter().filter(|row| row[n] != 0).count();
         (in_deg, out_deg)
+            */
     }
 
-    fn nodes(&self) -> impl Iterator<Item = usize> {
-        0..self.order()
+    fn nodes(&self) -> impl Iterator<Item = T> {
+        self.0.clone().into_keys()
     }
 
-    fn add_node(&mut self, _n: usize) {
+    fn add_node(&mut self, _n: T) {
+        todo!()
+        /*
         self.0.push(Vec::new());
         let new_order = self.order();
 
@@ -57,9 +54,12 @@ impl Graph<usize> for AdjacencyMatrix {
                 r.push(0);
             }
         }
+            */
     }
 
-    fn remove_node(&mut self, n: usize) {
+    fn remove_node(&mut self, _n: T) {
+        todo!()
+        /*
         if n < self.0.len() {
             self.0.remove(n);
             for row in self.0.iter_mut() {
@@ -69,9 +69,12 @@ impl Graph<usize> for AdjacencyMatrix {
                 row.pop();
             }
         }
+        */
     }
 
-    fn add_edge(&mut self, n: usize, m: usize) {
+    fn add_edge(&mut self, _n: T, _m: T) {
+        todo!()
+        /*
         if let Some(edges) = self.0.get_mut(n)
             && let Some(edge) = edges.get_mut(m)
         {
@@ -80,32 +83,43 @@ impl Graph<usize> for AdjacencyMatrix {
             }
             *edge = 1;
         }
+            */
     }
 
-    fn remove_edge(&mut self, n: usize, m: usize) {
+    fn remove_edge(&mut self, _n: T, _m: T) {
+        todo!()
+        /*
         if let Some(edges) = self.0.get_mut(n)
             && let Some(edge) = edges.get_mut(m)
         {
             *edge = 0;
         }
+        */
     }
 
-    type Neighbors<'a> = std::iter::FilterMap<
-        std::iter::Enumerate<std::slice::Iter<'a, usize>>,
-        fn((usize, &'a usize)) -> Option<usize>,
-    >;
+    type Neighbors<'a>
+        = std::iter::FilterMap<
+        std::iter::Enumerate<std::collections::hash_set::Iter<'a, (T, i32)>>,
+        fn((usize, &'a (T, i32))) -> Option<T>,
+    >
+    where
+        T: 'a;
 
-    fn neighbors<'a>(&'a self, n: usize) -> Self::Neighbors<'a> {
-        fn filter_fn((i, &weight): (usize, &usize)) -> Option<usize> {
-            if weight != 0 { Some(i) } else { None }
+    fn neighbors<'a>(&'a self, n: T) -> Option<Self::Neighbors<'a>> {
+        fn filter_fn<T: Node>((_, &(node, weight)): (usize, &(T, i32))) -> Option<T> {
+            if weight != 0 { Some(node) } else { None }
         }
-        match self.0.get(n) {
-            Some(row) => row.iter().enumerate().filter_map(filter_fn),
-            None => [].iter().enumerate().filter_map(filter_fn),
+
+        if let Some(neighbors) = self.0.get(&n) {
+            Some(neighbors.iter().enumerate().filter_map(filter_fn))
+        } else {
+            None
         }
     }
 
     fn bipartite(&self) -> bool {
+        todo!()
+        /*
         let n = self.order();
         if n == 0 {
             return true;
@@ -142,9 +156,12 @@ impl Graph<usize> for AdjacencyMatrix {
         }
 
         true
+        */
     }
 
     fn underlying_graph(&self) -> Self {
+        todo!()
+        /*
         let mut matrix: AdjacencyMatrix =
             AdjacencyMatrix(vec![vec![0; self.0.len()]; self.0.len()]);
 
@@ -157,11 +174,17 @@ impl Graph<usize> for AdjacencyMatrix {
         }
 
         matrix
+        */
     }
 }
 
-impl UndirectedGraph<usize> for AdjacencyMatrix {
+impl<T> UndirectedGraph<T> for AdjacencyMatrix<T>
+where
+    T: Node,
+{
     fn undirected_size(&self) -> usize {
+        todo!()
+        /*
         let mut size = 0;
         for i in 0..self.order() {
             for j in 0..=i {
@@ -171,9 +194,12 @@ impl UndirectedGraph<usize> for AdjacencyMatrix {
             }
         }
         size
+        */
     }
 
     fn connected(&self) -> bool {
+        todo!()
+        /*
         let n = self.order();
         if n == 0 {
             return true;
@@ -193,14 +219,18 @@ impl UndirectedGraph<usize> for AdjacencyMatrix {
         }
 
         visited.into_iter().all(|v| v)
+        */
     }
 
-    fn undirected_node_degree(&self, node: usize) -> usize {
+    fn undirected_node_degree(&self, _n: T) -> usize {
+        todo!()
+        /*
         if let Some(row) = self.0.get(node) {
             row.iter().filter(|&&val| val != 0).count()
         } else {
             0
         }
+        */
     }
 }
 

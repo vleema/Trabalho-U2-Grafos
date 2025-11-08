@@ -7,9 +7,7 @@
 //!
 //! # Modules
 //! - `graph`: Core graph traits and BFS/DFS events.
-//! - `adjacency_list`: Implementation of graphs using adjacency lists.
 //! - `adjacency_matrix`: Implementation of graphs using adjacency matrices.
-mod adjacency_list;
 mod adjacency_matrix;
 mod graph;
 
@@ -20,7 +18,5 @@ pub use graph::Graph;
 pub use graph::UndirectedGraph;
 
 pub mod graphs {
-    pub use crate::{
-        adjacency_list::AdjacencyList, adjacency_matrix::AdjacencyMatrix,
-    };
+    pub use crate::adjacency_matrix::AdjacencyMatrix;
 }
