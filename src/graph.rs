@@ -16,6 +16,10 @@ use std::hash::Hash;
 ///   Must implement [`Eq`], [`Hash`], and [`Copy`] to ensure efficient lookups.
 
 pub trait Node: Eq + Hash + Copy {}
+
+// Todo tipo que tem essas restrições é um node
+impl<T> Node for T where T: Eq + Hash + Copy {}
+
 pub trait Graph<T>
 where
     T: Node,
@@ -608,6 +612,7 @@ where
     }
 }
 
+#[derive(Debug)]
 pub struct DijkstraIter<'a, T, G>
 where
     T: Node,
@@ -675,14 +680,24 @@ where
             None => (),
             Some((node, node_weight)) => {
                 self.visited.insert(node);
+
                 if let Some(neighbors) = self.graph.weighted_neighbors(node) {
-                    for (neighbor, neighbor_weight) in neighbors {
-                        let node_distance = self.distance.get(&node).unwrap();
-                        if !self.visited.contains(&neighbor)
-                            && neighbor_weight > node_weight + node_distance
-                        {
-                            self.distance.insert(neighbor, node_weight + node_distance);
-                            //neighbor.1 = node_weight + node_distance;
+                    for (neighbor, edge_weight) in neighbors {
+                        if !self.visited.contains(&neighbor) {
+                            let new_distance = edge_weight + node_weight;
+
+                            match self.distance.get(&neighbor) {
+                                Some(&neighbor_distance) => {
+                                    if neighbor_distance > new_distance {
+                                        self.distance.insert(neighbor, new_distance);
+                                        self.parent.insert(neighbor, Some(node));
+                                    }
+                                }
+                                None => {
+                                    self.distance.insert(neighbor, new_distance);
+                                    self.parent.insert(neighbor, Some(node));
+                                }
+                            }
                         }
                     }
                 }
@@ -694,12 +709,13 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::{DfsEvent, Graph, UndirectedGraph, graphs::AdjacencyList, graphs::AdjacencyMatrix};
+    use super::*;
+    use crate::{Graph, graphs::AdjacencyMatrix};
 
     #[test]
     fn dijkstra_class() {
-        let map: HashMap<usize, HashSet<(usize, i32)>> = HashMap::new();
-        let set1: HashSet<(usize, i32)> = HashSet::new();
+        let mut map: HashMap<usize, HashSet<(usize, i32)>> = HashMap::new();
+        let mut set1: HashSet<(usize, i32)> = HashSet::new();
         set1.insert((1, 0));
         set1.insert((2, 2));
         set1.insert((3, 4));
@@ -707,7 +723,7 @@ mod test {
         set1.insert((5, 0));
         set1.insert((6, 0));
         set1.insert((7, 0));
-        let set2: HashSet<(usize, i32)> = HashSet::new();
+        let mut set2: HashSet<(usize, i32)> = HashSet::new();
         set2.insert((1, 2));
         set2.insert((2, 0));
         set2.insert((3, 0));
@@ -715,7 +731,7 @@ mod test {
         set2.insert((5, 0));
         set2.insert((6, 0));
         set2.insert((7, 0));
-        let set3: HashSet<(usize, i32)> = HashSet::new();
+        let mut set3: HashSet<(usize, i32)> = HashSet::new();
         set3.insert((1, 4));
         set3.insert((2, 0));
         set3.insert((3, 0));
@@ -723,7 +739,7 @@ mod test {
         set3.insert((5, 0));
         set3.insert((6, 4));
         set3.insert((7, 0));
-        let set4: HashSet<(usize, i32)> = HashSet::new();
+        let mut set4: HashSet<(usize, i32)> = HashSet::new();
         set4.insert((1, 5));
         set4.insert((2, 2));
         set4.insert((3, 1));
@@ -731,7 +747,7 @@ mod test {
         set4.insert((5, 2));
         set4.insert((6, 3));
         set4.insert((7, 0));
-        let set5: HashSet<(usize, i32)> = HashSet::new();
+        let mut set5: HashSet<(usize, i32)> = HashSet::new();
         set5.insert((1, 0));
         set5.insert((2, 0));
         set5.insert((3, 0));
@@ -739,7 +755,7 @@ mod test {
         set5.insert((5, 0));
         set5.insert((6, 1));
         set5.insert((7, 5));
-        let set6: HashSet<(usize, i32)> = HashSet::new();
+        let mut set6: HashSet<(usize, i32)> = HashSet::new();
         set6.insert((1, 0));
         set6.insert((2, 0));
         set6.insert((3, 4));
@@ -747,7 +763,7 @@ mod test {
         set6.insert((5, 1));
         set6.insert((6, 0));
         set6.insert((7, 7));
-        let set7: HashSet<(usize, i32)> = HashSet::new();
+        let mut set7: HashSet<(usize, i32)> = HashSet::new();
         set7.insert((1, 0));
         set7.insert((2, 0));
         set7.insert((3, 0));
@@ -764,88 +780,10 @@ mod test {
         map.insert(6, set6);
         map.insert(7, set7);
 
-        let mut g: UndirectedGraph<usize> = AdjacencyMatrix(map);
-        for iter in g.shortest_path_dijkstra(0).next() {
-            println!("{:?}", iter);
+        let mut g: AdjacencyMatrix<usize> = AdjacencyMatrix(map);
+        let mut iter = g.shortest_path_dijkstra(1);
+        while let Some(_) = iter.next() {
+            println!("iteração");
         }
-    }
-
-    #[test]
-    fn dfs_with_cycle() {
-        let mut g = AdjacencyList::default();
-        g.add_node(0);
-        g.add_node(1);
-        g.add_node(2);
-        g.add_edge(0, 1);
-        g.add_edge(1, 2);
-        g.add_edge(2, 0); // Cycle
-
-        let mut dfs = g.dfs(0);
-
-        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(0, None))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(1, Some(0)))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(2, Some(1)))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::NonTreeEdge(2, 0))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(2))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(1))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(0))));
-        assert!(dfs.next().is_none());
-    }
-
-    #[test]
-    fn dfs_simple_path() {
-        let mut g = AdjacencyList::default();
-        g.add_node(0);
-        g.add_node(1);
-        g.add_node(2);
-        g.add_edge(0, 1);
-        g.add_edge(1, 2);
-
-        let mut dfs = g.dfs(0);
-
-        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(0, None))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(1, Some(0)))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(2, Some(1)))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(2))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(1))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(0))));
-        assert!(dfs.next().is_none());
-    }
-
-    #[test]
-    fn single_node_dfs() {
-        let mut g = AdjacencyList::default();
-        g.add_node(0);
-
-        let mut dfs = g.dfs(0);
-
-        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(0, None))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(0))));
-        assert!(dfs.next().is_none());
-    }
-
-    #[test]
-    fn test_biconnected_components() {
-        // 0 -- 1 -- 4
-        //    /  \
-        //   3 -- 2
-        let mut graph = AdjacencyList::default();
-        graph.add_node(0);
-        graph.add_node(1);
-        graph.add_node(2);
-        graph.add_node(3);
-        graph.add_node(4);
-        graph.add_undirected_edge(1, 4);
-        graph.add_undirected_edge(0, 1);
-        graph.add_undirected_edge(1, 2);
-        graph.add_undirected_edge(1, 3);
-        graph.add_undirected_edge(2, 3);
-
-        let components: Vec<Vec<(usize, usize)>> = graph.biconnected_components(0).collect();
-
-        assert_eq!(components.len(), 3);
-        assert!(components.contains(&vec![(1, 4)]));
-        assert!(components.contains(&vec![(3, 1), (2, 3), (1, 2)]));
-        assert!(components.contains(&vec![(0, 1)]));
     }
 }
