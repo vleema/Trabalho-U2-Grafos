@@ -612,6 +612,7 @@ where
     }
 }
 
+// TODO: documentar em português tudo abaixo
 #[derive(Debug)]
 pub enum DijkstraEvent<T>
 where
@@ -672,7 +673,6 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         let mut unvisited_node: Option<(T, i32)> = None;
 
-        // Enquanto houver vértice não visitado continua
         for (_, node) in self.graph.nodes().enumerate() {
             if !self.visited.contains(&node) {
                 if let Some(distance) = self.distance.get(&node) {
@@ -723,7 +723,7 @@ mod test {
     use crate::{Graph, graphs::AdjacencyMatrix};
 
     #[test]
-    fn dijkstra_class() {
+    fn dijkstra_graph() {
         let mut map: HashMap<usize, HashSet<(usize, i32)>> = HashMap::new();
         let mut set1: HashSet<(usize, i32)> = HashSet::new();
         set1.insert((1, 0));
@@ -819,6 +819,89 @@ mod test {
         assert_eq!(iter.parent.get(&5), Some(Some(4 as usize)).as_ref());
         assert_eq!(iter.parent.get(&6), Some(Some(4 as usize)).as_ref());
         assert_eq!(iter.parent.get(&7), Some(Some(5 as usize)).as_ref());
+        println!("Fim das iterações")
+    }
+
+    #[test]
+    fn dijkstra_digraph() {
+        let mut map: HashMap<char, HashSet<(char, i32)>> = HashMap::new();
+        let mut set1: HashSet<(char, i32)> = HashSet::new();
+        set1.insert(('A', 0));
+        set1.insert(('B', 5));
+        set1.insert(('C', 2));
+        set1.insert(('D', 0));
+        set1.insert(('E', 0));
+        set1.insert(('F', 0));
+        let mut set2: HashSet<(char, i32)> = HashSet::new();
+        set2.insert(('A', 0));
+        set2.insert(('B', 0));
+        set2.insert(('C', 1));
+        set2.insert(('D', 4));
+        set2.insert(('E', 2));
+        set2.insert(('F', 0));
+        let mut set3: HashSet<(char, i32)> = HashSet::new();
+        set3.insert(('A', 0));
+        set3.insert(('B', 0));
+        set3.insert(('C', 0));
+        set3.insert(('D', 0));
+        set3.insert(('E', 7));
+        set3.insert(('F', 0));
+        let mut set4: HashSet<(char, i32)> = HashSet::new();
+        set4.insert(('A', 0));
+        set4.insert(('B', 0));
+        set4.insert(('C', 0));
+        set4.insert(('D', 0));
+        set4.insert(('E', 5));
+        set4.insert(('F', 3));
+        let mut set5: HashSet<(char, i32)> = HashSet::new();
+        set5.insert(('A', 0));
+        set5.insert(('B', 0));
+        set5.insert(('C', 0));
+        set5.insert(('D', 0));
+        set5.insert(('E', 0));
+        set5.insert(('F', 1));
+        let mut set6: HashSet<(char, i32)> = HashSet::new();
+        set6.insert(('A', 0));
+        set6.insert(('B', 0));
+        set6.insert(('C', 0));
+        set6.insert(('D', 0));
+        set6.insert(('E', 0));
+        set6.insert(('F', 0));
+
+        map.insert('A', set1);
+        map.insert('B', set2);
+        map.insert('C', set3);
+        map.insert('D', set4);
+        map.insert('E', set5);
+        map.insert('F', set6);
+
+        let g: AdjacencyMatrix<char> = AdjacencyMatrix(map);
+        let mut iter: DijkstraIter<char, AdjacencyMatrix<char>> = g.shortest_path_dijkstra('A');
+        while let Some(event) = iter.next() {
+            match event {
+                DijkstraEvent::Discover((node, weight)) => println!(
+                    "Visitamos o vértice {} e agora tem distância {}",
+                    node, weight
+                ),
+                DijkstraEvent::Finish => {}
+            }
+        }
+
+        assert_eq!(iter.visited.len(), 6);
+        assert_eq!(iter.distance.len(), 6);
+        assert_eq!(iter.parent.len(), 6);
+        assert_eq!(iter.distance.get(&'A'), Some(0 as i32).as_ref());
+        assert_eq!(iter.distance.get(&'B'), Some(5 as i32).as_ref());
+        assert_eq!(iter.distance.get(&'C'), Some(2 as i32).as_ref());
+        assert_eq!(iter.distance.get(&'D'), Some(9 as i32).as_ref());
+        assert_eq!(iter.distance.get(&'E'), Some(7 as i32).as_ref());
+        assert_eq!(iter.distance.get(&'F'), Some(8 as i32).as_ref());
+        assert_eq!(iter.parent.get(&'A'), Some(None).as_ref());
+        assert_eq!(iter.parent.get(&'B'), Some(Some('A')).as_ref());
+        assert_eq!(iter.parent.get(&'C'), Some(Some('A')).as_ref());
+        assert_eq!(iter.parent.get(&'D'), Some(Some('B')).as_ref());
+        assert_eq!(iter.parent.get(&'E'), Some(Some('B')).as_ref());
+        assert_eq!(iter.parent.get(&'F'), Some(Some('E')).as_ref());
         println!("Fim das iterações")
     }
 }
