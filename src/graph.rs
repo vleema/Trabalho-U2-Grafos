@@ -613,6 +613,15 @@ where
 }
 
 #[derive(Debug)]
+pub enum DijkstraEvent<T>
+where
+    T: Node,
+{
+    Discover((T, i32)),
+    Finish,
+}
+
+#[derive(Debug)]
 pub struct DijkstraIter<'a, T, G>
 where
     T: Node,
@@ -658,7 +667,7 @@ where
     T: Node,
     G: Graph<T>,
 {
-    type Item = ();
+    type Item = DijkstraEvent<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut unvisited_node: Option<(T, i32)> = None;
@@ -677,7 +686,7 @@ where
         }
 
         match unvisited_node {
-            None => (),
+            None => None,
             Some((node, node_weight)) => {
                 self.visited.insert(node);
 
@@ -701,9 +710,10 @@ where
                         }
                     }
                 }
+
+                Some(DijkstraEvent::Discover((node, node_weight)))
             }
         }
-        Some(())
     }
 }
 
@@ -780,10 +790,35 @@ mod test {
         map.insert(6, set6);
         map.insert(7, set7);
 
-        let mut g: AdjacencyMatrix<usize> = AdjacencyMatrix(map);
-        let mut iter = g.shortest_path_dijkstra(1);
-        while let Some(_) = iter.next() {
-            println!("iteração");
+        let g: AdjacencyMatrix<usize> = AdjacencyMatrix(map);
+        let mut iter: DijkstraIter<usize, AdjacencyMatrix<usize>> = g.shortest_path_dijkstra(1);
+        while let Some(event) = iter.next() {
+            match event {
+                DijkstraEvent::Discover((node, weight)) => println!(
+                    "Visitamos o vértice {} e agora tem distância {}",
+                    node, weight
+                ),
+                DijkstraEvent::Finish => {}
+            }
         }
+
+        assert_eq!(iter.visited.len(), 7);
+        assert_eq!(iter.distance.len(), 7);
+        assert_eq!(iter.parent.len(), 7);
+        assert_eq!(iter.distance.get(&1), Some(0 as i32).as_ref());
+        assert_eq!(iter.distance.get(&2), Some(2 as i32).as_ref());
+        assert_eq!(iter.distance.get(&3), Some(4 as i32).as_ref());
+        assert_eq!(iter.distance.get(&4), Some(4 as i32).as_ref());
+        assert_eq!(iter.distance.get(&5), Some(6 as i32).as_ref());
+        assert_eq!(iter.distance.get(&6), Some(7 as i32).as_ref());
+        assert_eq!(iter.distance.get(&7), Some(11 as i32).as_ref());
+        assert_eq!(iter.parent.get(&1), Some(None).as_ref());
+        assert_eq!(iter.parent.get(&2), Some(Some(1 as usize)).as_ref());
+        assert_eq!(iter.parent.get(&3), Some(Some(1 as usize)).as_ref());
+        assert_eq!(iter.parent.get(&4), Some(Some(2 as usize)).as_ref());
+        assert_eq!(iter.parent.get(&5), Some(Some(4 as usize)).as_ref());
+        assert_eq!(iter.parent.get(&6), Some(Some(4 as usize)).as_ref());
+        assert_eq!(iter.parent.get(&7), Some(Some(5 as usize)).as_ref());
+        println!("Fim das iterações")
     }
 }
