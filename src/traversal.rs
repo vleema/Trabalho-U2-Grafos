@@ -85,12 +85,12 @@ where
             if let Some(neighbor) = neighbors.next() {
                 self.stack.push((node, neighbors));
 
-                if self.visited.insert(neighbor) {
+                if self.visited.insert(neighbor.0) {
                     self.stack
-                        .push((neighbor, self.graph.neighbors(neighbor).unwrap()));
-                    return Some(DfsEvent::Discover(neighbor, Some(node)));
+                        .push((neighbor.0, self.graph.neighbors(neighbor.0).unwrap()));
+                    return Some(DfsEvent::Discover(neighbor.0, Some(node)));
                 } else {
-                    return Some(DfsEvent::NonTreeEdge(node, neighbor));
+                    return Some(DfsEvent::NonTreeEdge(node, neighbor.0));
                 }
             } else {
                 return Some(DfsEvent::Finish(node));
@@ -171,12 +171,12 @@ where
             None => {}
             Some(neighbors) => {
                 for n in neighbors {
-                    if self.visited.insert(n) {
-                        self.queue.push_back(n);
-                        self.parent.insert(n, Some(node));
-                        children.push(n);
-                    } else if Some(node) != self.parent.get(&n).copied().flatten() {
-                        events.push(BfsEvent::CrossEdge(node, n));
+                    if self.visited.insert(n.0) {
+                        self.queue.push_back(n.0);
+                        self.parent.insert(n.0, Some(node));
+                        children.push(n.0);
+                    } else if Some(node) != self.parent.get(&n.0).copied().flatten() {
+                        events.push(BfsEvent::CrossEdge(node, n.0));
                     }
                 }
             }
@@ -400,4 +400,92 @@ where
         }
         None
     }
+}
+
+#[cfg(test)]
+mod test {
+    /* Uncomment when is implemented
+    use super::*;
+    use crate::UndirectedGraph;
+    use crate::adjacency_matrix::AdjacencyMatrix;
+
+    #[test]
+    fn dfs_with_cycle() {
+        let mut g = AdjacencyMatrix::default();
+        g.add_node(0);
+        g.add_node(1);
+        g.add_node(2);
+        g.add_edge(0, 1);
+        g.add_edge(1, 2);
+        g.add_edge(2, 0); // Cycle
+
+        let mut dfs = g.dfs(0);
+
+        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(0, None))));
+        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(1, Some(0)))));
+        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(2, Some(1)))));
+        assert!(matches!(dfs.next(), Some(DfsEvent::NonTreeEdge(2, 0))));
+        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(2))));
+        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(1))));
+        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(0))));
+        assert!(dfs.next().is_none());
+    }
+
+    #[test]
+    fn dfs_simple_path() {
+        let mut g = AdjacencyMatrix::default();
+        g.add_node(0);
+        g.add_node(1);
+        g.add_node(2);
+        g.add_edge(0, 1);
+        g.add_edge(1, 2);
+
+        let mut dfs = g.dfs(0);
+
+        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(0, None))));
+        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(1, Some(0)))));
+        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(2, Some(1)))));
+        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(2))));
+        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(1))));
+        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(0))));
+        assert!(dfs.next().is_none());
+    }
+
+    #[test]
+    fn single_node_dfs() {
+        let mut g = AdjacencyMatrix::default();
+        g.add_node(0);
+
+        let mut dfs = g.dfs(0);
+
+        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(0, None))));
+        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(0))));
+        assert!(dfs.next().is_none());
+    }
+
+    #[test]
+    fn test_biconnected_components() {
+        // 0 -- 1 -- 4
+        //    /  \
+        //   3 -- 2
+        let mut graph = AdjacencyMatrix::default();
+        graph.add_node(0);
+        graph.add_node(1);
+        graph.add_node(2);
+        graph.add_node(3);
+        graph.add_node(4);
+        graph.add_undirected_edge(1, 4);
+        graph.add_undirected_edge(0, 1);
+        graph.add_undirected_edge(1, 2);
+        graph.add_undirected_edge(1, 3);
+        graph.add_undirected_edge(2, 3);
+
+        let components: Vec<Vec<(usize, usize)>> = graph.biconnected_components(0).collect();
+
+        assert_eq!(components.len(), 3);
+        assert!(components.contains(&vec![(1, 4)]));
+        assert!(components.contains(&vec![(3, 1), (2, 3), (1, 2)]));
+        assert!(components.contains(&vec![(0, 1)]));
+    }
+    */
 }

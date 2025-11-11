@@ -7,7 +7,7 @@ use std::collections::{HashMap, HashSet};
 /// guarda um nó e o valor é um conjunto de arestas.
 /// Cada elemento do conjunto é uma dupla: 1º elemento indica
 /// o vértice adjacente e o 2º elemento o peso da aresta.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct AdjacencyMatrix<T>(pub HashMap<T, HashSet<(T, i32)>>)
 where
     T: Node;
@@ -100,32 +100,12 @@ where
     type Neighbors<'a>
         = std::iter::FilterMap<
         std::iter::Enumerate<std::collections::hash_set::Iter<'a, (T, i32)>>,
-        fn((usize, &'a (T, i32))) -> Option<T>,
-    >
-    where
-        T: 'a;
-
-    fn neighbors<'a>(&'a self, n: T) -> Option<Self::Neighbors<'a>> {
-        fn filter_fn<T: Node>((_, &(node, weight)): (usize, &(T, i32))) -> Option<T> {
-            if weight != 0 { Some(node) } else { None }
-        }
-
-        if let Some(neighbors) = self.0.get(&n) {
-            Some(neighbors.iter().enumerate().filter_map(filter_fn))
-        } else {
-            None
-        }
-    }
-
-    type WeightedNeighbors<'a>
-        = std::iter::FilterMap<
-        std::iter::Enumerate<std::collections::hash_set::Iter<'a, (T, i32)>>,
         fn((usize, &'a (T, i32))) -> Option<(T, i32)>,
     >
     where
         T: 'a;
 
-    fn weighted_neighbors<'a>(&'a self, n: T) -> Option<Self::WeightedNeighbors<'a>> {
+    fn neighbors<'a>(&'a self, n: T) -> Option<Self::Neighbors<'a>> {
         fn filter_fn<T: Node>((_, &(node, weight)): (usize, &(T, i32))) -> Option<(T, i32)> {
             if weight != 0 {
                 Some((node, weight))

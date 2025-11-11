@@ -36,7 +36,7 @@ where
         distance.insert(start, 0);
         parent.insert(start, None);
 
-        if let Some(neighbors) = graph.weighted_neighbors(start) {
+        if let Some(neighbors) = graph.neighbors(start) {
             for neighbor in neighbors {
                 parent.insert(neighbor.0, Some(start));
                 distance.insert(neighbor.0, neighbor.1);
@@ -77,7 +77,7 @@ where
             Some((node, node_weight)) => {
                 self.visited.insert(node);
 
-                if let Some(neighbors) = self.graph.weighted_neighbors(node) {
+                if let Some(neighbors) = self.graph.neighbors(node) {
                     for (neighbor, edge_weight) in neighbors {
                         if !self.visited.contains(&neighbor) {
                             let new_distance = edge_weight + node_weight;
