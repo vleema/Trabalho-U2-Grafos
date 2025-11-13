@@ -2,9 +2,3 @@
 name = "graphs-algorithms"
 version = "0.1.0"
 edition = "2024"
-
-[workspace]
-members = ["crates/graph-io", "."]
-
-[dev-dependencies]
-graph-io = { path = "crates/graph-io" }
