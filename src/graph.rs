@@ -61,12 +61,12 @@ where
     /// Adds a **directed edge** from node `n` to node `m`.
     ///
     /// If either node does not exist, this operation has no effect.
-    fn add_edge(&mut self, n: T, m: T);
+    fn add_edge(&mut self, n: T, m: T, w: i32);
 
     /// Removes a **directed edge** from node `n` to node `m`, if it exists.
     ///
     /// If either node does not exist, this operation has no effect.
-    fn remove_edge(&mut self, n: T, m: T);
+    fn remove_edge(&mut self, n: T, m: T, w: Option<i32>);
 
     type Neighbors<'a>: Iterator<Item = (T, i32)>
     where
@@ -164,17 +164,17 @@ where
     /// Adds an **undirected edge** `(n <-> m)` to the graph.
     ///
     /// Internally, this adds both directed edges `(n -> m)` and `(m -> n)`.
-    fn add_undirected_edge(&mut self, n: T, m: T) {
-        self.add_edge(n, m);
-        self.add_edge(m, n);
+    fn add_undirected_edge(&mut self, n: T, m: T, w: i32) {
+        self.add_edge(n, m, w);
+        self.add_edge(m, n, w);
     }
 
     /// Removes an **undirected edge** `(n <-> m)` from the graph.
     ///
     /// Internally, this removes both directed edges `(n <-> m)` and `(m <-> n)`.
-    fn remove_undirected_edge(&mut self, n: T, m: T) {
-        self.remove_edge(n, m);
-        self.remove_edge(m, n);
+    fn remove_undirected_edge(&mut self, n: T, m: T, w: Option<i32>) {
+        self.remove_edge(n, m, w);
+        self.remove_edge(m, n, w);
     }
 
     /// Returns the **degree** of the given node,

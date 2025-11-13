@@ -13,6 +13,7 @@ pub use graph::UndirectedGraph;
 pub mod graphs {
     pub use crate::adjacency_list::AdjacencyList;
     pub use crate::shortest_path::DijkstraIter;
+    pub use crate::shortest_path::DijkstraEvent;
     pub use crate::traversal::BfsEvent;
     pub use crate::traversal::BfsIter;
     pub use crate::traversal::BiconnectedComponentsIter;

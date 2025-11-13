@@ -13,6 +13,15 @@ pub struct AdjacencyList<T>(pub HashMap<T, HashSet<(T, i32)>>)
 where
     T: Node;
 
+impl<T> AdjacencyList<T>
+where
+    T: Node,
+{
+    pub fn new() -> Self {
+        AdjacencyList(HashMap::new())
+    }
+}
+
 impl<T> Graph<T> for AdjacencyList<T>
 where
     T: Node,
@@ -22,13 +31,16 @@ where
     }
 
     fn size(&self) -> usize {
-        todo!()
-        /*self.0
-            .iter()
-            .enumerate()
-            .map(|(i, _)| self.neighbors(i).count())
+        self.0
+            .keys()
+            .map(|node| {
+                if let Some(n) = self.neighbors(*node) {
+                    n.count()
+                } else {
+                    0
+                }
+            })
             .sum()
-        */
     }
 
     fn node_degrees(&self, _n: T) -> (usize, usize) {
@@ -44,18 +56,8 @@ where
         self.0.clone().into_keys()
     }
 
-    fn add_node(&mut self, _n: T) {
-        todo!()
-        /*
-        self.0.push(Vec::new());
-        let new_order = self.order();
-
-        for r in &mut self.0 {
-            while r.len() < new_order {
-                r.push(0);
-            }
-        }
-            */
+    fn add_node(&mut self, n: T) {
+        self.0.insert(n, HashSet::new());
     }
 
     fn remove_node(&mut self, _n: T) {
@@ -73,21 +75,15 @@ where
         */
     }
 
-    fn add_edge(&mut self, _n: T, _m: T) {
-        todo!()
-        /*
-        if let Some(edges) = self.0.get_mut(n)
-            && let Some(edge) = edges.get_mut(m)
+    fn add_edge(&mut self, n: T, m: T, w: i32) {
+        if self.0.contains_key(&m)
+            && let Some(node) = self.0.get_mut(&n)
         {
-            if *edge == 1 {
-                return;
-            }
-            *edge = 1;
+            node.insert((m, w));
         }
-            */
     }
 
-    fn remove_edge(&mut self, _n: T, _m: T) {
+    fn remove_edge(&mut self, _n: T, _m: T, _w: Option<i32>) {
         todo!()
         /*
         if let Some(edges) = self.0.get_mut(n)
