@@ -7,7 +7,7 @@ pub enum DijkstraEvent<T>
 where
     T: Node,
 {
-    Discover((T, i32)),
+    Discover((T, i32, Option<T>)),
     Finish,
 }
 
@@ -29,10 +29,9 @@ where
     G: Graph<T>,
 {
     pub fn new(graph: &'a G, start: T) -> Self {
-        let mut visited: HashSet<T> = HashSet::new();
+        let visited: HashSet<T> = HashSet::new();
         let mut distance: HashMap<T, i32> = HashMap::new();
         let mut parent: HashMap<T, Option<T>> = HashMap::new();
-        visited.insert(start);
         distance.insert(start, 0);
         parent.insert(start, None);
 
@@ -98,7 +97,12 @@ where
                     }
                 }
 
-                Some(DijkstraEvent::Discover((node, node_weight)))
+                let mut parent: Option<T> = None;
+                if let Some(opt) = self.parent.get(&node) {
+                    parent = *opt;
+                }
+
+                Some(DijkstraEvent::Discover((node, node_weight, parent)))
             }
         }
     }
@@ -180,11 +184,14 @@ mod test {
 
         let g: AdjacencyList<usize> = AdjacencyList(map);
         let mut iter: DijkstraIter<usize, AdjacencyList<usize>> = g.shortest_path_dijkstra(1);
+
         while let Some(event) = iter.next() {
             match event {
-                DijkstraEvent::Discover((node, weight)) => println!(
-                    "Visitamos o vértice {} e agora tem distância {}",
-                    node, weight
+                DijkstraEvent::Discover((node, weight, parent)) => println!(
+                    "Visitamos o vértice {} e agora tem distância {} a partir do predecessor {}",
+                    node,
+                    weight,
+                    parent.unwrap_or(0)
                 ),
                 DijkstraEvent::Finish => {}
             }
@@ -266,12 +273,13 @@ mod test {
         let g: AdjacencyList<char> = AdjacencyList(map);
         let mut iter: DijkstraIter<char, AdjacencyList<char>> = g.shortest_path_dijkstra('A');
         while let Some(event) = iter.next() {
-            match event {
-                DijkstraEvent::Discover((node, weight)) => println!(
-                    "Visitamos o vértice {} e agora tem distância {}",
-                    node, weight
-                ),
-                DijkstraEvent::Finish => {}
+            if let DijkstraEvent::Discover((node, weight, parent)) = event {
+                println!(
+                    "Visitamos o vértice {} e agora tem distância {} a partir do predecessor {}",
+                    node,
+                    weight,
+                    parent.unwrap_or('-')
+                )
             }
         }
 
