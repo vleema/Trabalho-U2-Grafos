@@ -14,7 +14,6 @@ use std::hash::Hash;
 /// # Type Parameters
 /// - `Node`: The type used to represent graph nodes.
 ///   Must implement [`Eq`], [`Hash`], and [`Copy`] to ensure efficient lookups.
-
 pub trait Node: Eq + Hash + Copy {}
 pub trait Graph<T>
 where

@@ -1,5 +1,0 @@
-BasedOnStyle: Google
-Language: Cpp
-IndentWidth: 4
-AllowShortIfStatementsOnASingleLine: WithoutElse
-AllowShortBlocksOnASingleLine: Always

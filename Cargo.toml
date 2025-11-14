@@ -2,12 +2,3 @@
 name = "graphs-algorithms"
 version = "0.1.0"
 edition = "2024"
-
-[workspace]
-members = ["crates/cpp-api", "crates/graph-io", "."]
-
-[dev-dependencies]
-cpp-api = { path = "crates/cpp-api" }
-graph-io = { path = "crates/graph-io" }
-criterion = "0.7.0"
-gungraun = "0.17.0"
