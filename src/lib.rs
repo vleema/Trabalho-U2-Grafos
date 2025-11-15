@@ -13,6 +13,7 @@ pub use graph::Graph;
 pub use graph::Node;
 pub use graph::UndirectedGraph;
 pub use graph::WeightedGraph;
+pub use minimum_spanning_tree::{KruskalEvent, PrimEvent};
 
 pub mod graphs {
     pub use crate::adjacency_list::AdjacencyList;

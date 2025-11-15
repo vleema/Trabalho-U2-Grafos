@@ -167,6 +167,24 @@ pub trait UndirectedGraph<N: Node>: Graph<N> {
         DfsEdgesIter::new(self, start)
             .filter(|edge| matches!(edge, Edge::Tree(_, _) | Edge::Back(_, _)))
     }
+
+    fn minimum_spanning_tree_kruskal(
+        &self,
+    ) -> crate::minimum_spanning_tree::KruskalIter<'_, N, Self>
+    where
+        N: Ord,
+        Self: WeightedGraph<N, i32>,
+    {
+        crate::minimum_spanning_tree::KruskalIter::new(self)
+    }
+
+    fn minimum_spanning_tree_prim(&self) -> crate::minimum_spanning_tree::PrimIter<'_, N, Self>
+    where
+        N: Ord,
+        Self: WeightedGraph<N, i32>,
+    {
+        crate::minimum_spanning_tree::PrimIter::new(self)
+    }
 }
 
 pub trait Weight: CheckedAdd + Ord + Bounded + Zero + One + Copy {}
