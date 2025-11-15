@@ -64,6 +64,7 @@ fn main() {
         }
     }
 
+    // TODO: investigar problema de None e unwrap.
     println!("O caminho mais curto entre s = 1 e fim = 15 é: ");
     let mut path: Vec<(usize, usize)> = vec![];
     let mut start: usize = 15;
