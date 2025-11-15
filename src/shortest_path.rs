@@ -18,7 +18,7 @@ pub struct DijkstraIter<'a, N, W, G>
 where
     N: Node,
     W: Weight,
-    G: WeightedGraph<N, W>,
+    G: WeightedGraph<N, W> + ?Sized,
 {
     graph: &'a G,
     visited: HashSet<N>,
@@ -30,7 +30,7 @@ impl<'a, N, W, G> DijkstraIter<'a, N, W, G>
 where
     N: Node,
     W: Weight,
-    G: WeightedGraph<N, W>,
+    G: WeightedGraph<N, W> + ?Sized,
 {
     pub fn new(graph: &'a G, start: N) -> Self {
         let visited: HashSet<N> = HashSet::new();
@@ -57,7 +57,7 @@ impl<'a, N, W, G> Iterator for DijkstraIter<'a, N, W, G>
 where
     N: Node,
     W: Weight,
-    G: WeightedGraph<N, W>,
+    G: WeightedGraph<N, W> + ?Sized,
 {
     type Item = DijkstraEvent<N, W>;
 
@@ -106,6 +106,60 @@ where
                 Some(DijkstraEvent::Discover((node, node_weight, parent)))
             }
         }
+    }
+}
+
+pub struct FloydWarshallResult<Node, Weight> {
+    pub dist: HashMap<Node, HashMap<Node, Weight>>,
+    pub pred: HashMap<Node, HashMap<Node, Node>>,
+}
+
+impl<N: Node, W: Weight> FloydWarshallResult<N, W> {
+    pub fn new(g: &(impl WeightedGraph<N, W> + ?Sized)) -> Self {
+        let mut dist = HashMap::with_capacity(g.order());
+        let mut pred = HashMap::with_capacity(g.order());
+        for n in g.nodes() {
+            let mut neighbors_dist = HashMap::new();
+            let mut neighors_pred = HashMap::new();
+
+            for (neighbor, weight) in g.weighted_neighbors(n) {
+                neighbors_dist.insert(neighbor, weight);
+                neighors_pred.insert(neighbor, n);
+            }
+
+            dist.insert(n, neighbors_dist);
+            pred.insert(n, neighors_pred);
+        }
+
+        let unwrap_dist = |dist: &HashMap<N, HashMap<N, W>>, i, j| {
+            dist.get(&i)
+                .and_then(|ds| ds.get(&j))
+                .copied()
+                .unwrap_or(W::max_value())
+        };
+
+        for k in g.nodes() {
+            for i in g.nodes() {
+                for j in g.nodes() {
+                    let dist_ik = unwrap_dist(&dist, i, k);
+                    let dist_kj = unwrap_dist(&dist, k, j);
+                    let dist_ij = unwrap_dist(&dist, i, j);
+                    if let Some(sum) = dist_ik.checked_add(&dist_kj)
+                        && sum < dist_ij
+                    {
+                        dist.entry(i).and_modify(|ds| {
+                            ds.entry(j).and_modify(|d| *d = sum).or_insert(sum);
+                        });
+                        let pred_kj = pred[&k][&j];
+                        pred.entry(i).and_modify(|ps| {
+                            ps.entry(j).and_modify(|p| *p = pred_kj).or_insert(pred_kj);
+                        });
+                    }
+                }
+            }
+        }
+
+        Self { dist, pred }
     }
 }
 
@@ -213,5 +267,32 @@ mod test {
         assert_eq!(iter.parent.get(&'E'), Some(Some('B')).as_ref());
         assert_eq!(iter.parent.get(&'F'), Some(Some('E')).as_ref());
         println!("Fim das iterações")
+    }
+
+    #[test]
+    fn floyd_warshall() {
+        let mut map: HashMap<char, Vec<(char, i32)>> = HashMap::with_capacity(6);
+
+        map.insert('A', vec![('B', 5), ('C', 2)]);
+        map.insert('B', vec![('C', 1), ('D', 4), ('E', 2)]);
+        map.insert('C', vec![('E', 7)]);
+        map.insert('D', vec![('E', 5), ('F', 3)]);
+        map.insert('E', vec![('F', 1)]);
+        map.insert('F', vec![]);
+
+        let g: AdjacencyList<char, i32> = AdjacencyList(map);
+        let FloydWarshallResult { dist, pred } = g.floyd_warshall();
+
+        assert_eq!(dist[&'A'][&'B'], 5); // A -> B
+        assert_eq!(dist[&'A'][&'C'], 2); // A -> C
+        assert_eq!(dist[&'A'][&'D'], 9); // A -> C -> B -> D
+        assert_eq!(dist[&'A'][&'E'], 7); // A -> B -> E
+        assert_eq!(dist[&'A'][&'F'], 8); // A -> B -> E -> F
+
+        assert_eq!(pred[&'A'][&'B'], 'A'); // A -> B
+        assert_eq!(pred[&'A'][&'E'], 'B'); // A -> B -> E
+        assert_eq!(pred[&'A'][&'F'], 'E'); // A -> B -> E -> F
+
+        assert_eq!(pred[&'F'].get(&'A'), None);
     }
 }

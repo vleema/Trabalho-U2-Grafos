@@ -69,7 +69,7 @@ impl<N: Node, W: Weight> Graph<N> for AdjacencyList<N, W> {
         }
     }
 
-    fn remove_edge(&mut self, _n: N, _m: N, _w: Option<i32>) {
+    fn remove_edge(&mut self, _n: N, _m: N) {
         todo!()
         /*
         if let Some(edges) = self.0.get_mut(n)

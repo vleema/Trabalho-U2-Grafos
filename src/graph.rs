@@ -1,9 +1,10 @@
-use num_traits::{Bounded, One, Zero};
+use num_traits::{Bounded, CheckedAdd, One, Zero};
 
-use crate::graphs::{
-    BfsIter, BiconnectedComponentsIter, DfsEdgesIter, DfsIter, DijkstraIter, Edge,
+use crate::{
+    graphs::{BfsIter, BiconnectedComponentsIter, DfsEdgesIter, DfsIter, DijkstraIter, Edge},
+    shortest_path::FloydWarshallResult,
 };
-use std::{hash::Hash, ops::Add};
+use std::hash::Hash;
 
 pub trait Node: Eq + Hash + Copy {}
 
@@ -65,7 +66,7 @@ pub trait Graph<N: Node> {
     /// Removes a **directed edge** from node `n` to node `m`, if it exists.
     ///
     /// If either node does not exist, this operation has no effect.
-    fn remove_edge(&mut self, n: N, m: N, w: Option<i32>);
+    fn remove_edge(&mut self, n: N, m: N);
 
     type Neighbors<'a>: Iterator<Item = N>
     where
@@ -93,30 +94,21 @@ pub trait Graph<N: Node> {
     /// Returns an iterator that performs a **depth-first search (DFS)** starting from `start`.
     ///
     /// The iterator yields [`DfsEvent`] values that represent the traversal steps.
-    fn dfs(&self, start: N) -> DfsIter<'_, N, Self>
-    where
-        Self: Sized,
-    {
+    fn dfs(&self, start: N) -> DfsIter<'_, N, Self> {
         DfsIter::new(self, start)
     }
 
     /// Returns an iterator that performs a **breadth-first search (BFS)** starting from `start`.
     ///
     /// The iterator yields [`BfsEvent`] values for each level of the search.
-    fn bfs(&self, start: N) -> BfsIter<'_, N, Self>
-    where
-        Self: Sized,
-    {
+    fn bfs(&self, start: N) -> BfsIter<'_, N, Self> {
         BfsIter::new(self, start)
     }
 
     /// Returns an iterator that classifies all edges encountered during a DFS traversal.
     ///
     /// The classification follows standard DFS rules, producing edges of type ['Edge']
-    fn classify_edges(&self, start: N) -> DfsEdgesIter<'_, N, Self>
-    where
-        Self: Sized,
-    {
+    fn classify_edges(&self, start: N) -> DfsEdgesIter<'_, N, Self> {
         DfsEdgesIter::new(self, start)
     }
 }
@@ -138,10 +130,7 @@ pub trait UndirectedGraph<N: Node>: Graph<N> {
     /// Returns an iterator over the **biconnected components** of the graph.
     ///
     /// The traversal starts from the given `start` node.
-    fn biconnected_components(&self, start: N) -> BiconnectedComponentsIter<'_, N, Self>
-    where
-        Self: Sized,
-    {
+    fn biconnected_components(&self, start: N) -> BiconnectedComponentsIter<'_, N, Self> {
         BiconnectedComponentsIter::new(self, start)
     }
 
@@ -156,9 +145,9 @@ pub trait UndirectedGraph<N: Node>: Graph<N> {
     /// Removes an **undirected edge** `(n <-> m)` from the graph.
     ///
     /// Internally, this removes both directed edges `(n <-> m)` and `(m <-> n)`.
-    fn remove_undirected_edge(&mut self, n: N, m: N, w: Option<i32>) {
-        self.remove_edge(n, m, w);
-        self.remove_edge(m, n, w);
+    fn remove_undirected_edge(&mut self, n: N, m: N) {
+        self.remove_edge(n, m);
+        self.remove_edge(m, n);
     }
 
     /// Returns the **degree** of the given node,
@@ -173,7 +162,6 @@ pub trait UndirectedGraph<N: Node>: Graph<N> {
     /// as these represent meaningful relations in undirected graphs.
     fn classify_undirected_edges<'a>(&'a self, start: N) -> impl Iterator<Item = Edge<N>>
     where
-        Self: Sized,
         N: 'a,
     {
         DfsEdgesIter::new(self, start)
@@ -181,41 +169,23 @@ pub trait UndirectedGraph<N: Node>: Graph<N> {
     }
 }
 
-pub trait Weight: Add<Output = Self> + Ord + Bounded + Sized + Zero + Copy + One {}
+pub trait Weight: CheckedAdd + Ord + Bounded + Zero + One + Copy {}
 
-impl<T> Weight for T where T: Add<Output = Self> + Ord + Bounded + Sized + Zero + Copy + One {}
+impl<T> Weight for T where T: CheckedAdd + Ord + Bounded + One + Zero + Copy {}
 
 pub trait WeightedGraph<N: Node, W: Weight>: Graph<N> {
     type WeightedNeighbors<'a>: Iterator<Item = (N, W)>
     where
-        Self: 'a,
-        N: 'a;
+        Self: 'a;
     fn weighted_neighbors(&self, n: N) -> Self::WeightedNeighbors<'_>;
 
     fn add_weighted_edge(&mut self, n: N, m: N, w: W);
 
-    fn djikstra(&self, start: N) -> DijkstraIter<'_, N, W, Self>
-    where
-        Self: Sized,
-    {
+    fn djikstra(&self, start: N) -> DijkstraIter<'_, N, W, Self> {
         DijkstraIter::new(self, start)
     }
 
-    // fn floyd_warshall(&self) -> (HashMap<N, HashMap<N, W>>, HashMap<N, N>) {
-    //     let mut dist = HashMap::with_capacity(self.order());
-    //     for n in self.nodes() {
-    //         let mut dists
-    //         for m in self.nodes() {
-    //         dist.insert(n, HashMap::f)
-    //         }
-    //     }
-    //
-    //     for k in self.nodes() {
-    //         for i in self.nodes() {
-    //             for j in self.nodes() {
-    //                 let ik =
-    //             }
-    //         }
-    //     }
-    // }
+    fn floyd_warshall(&self) -> FloydWarshallResult<N, W> {
+        FloydWarshallResult::new(self)
+    }
 }
