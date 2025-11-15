@@ -1,2 +1,89 @@
-\chapter{Descrição em Pseudocódigo dos Algoritmos da API}
-\label{ch:pseudocode}
+\chapter{Implementação}
+\label{ch:implementation}
+
+Nesse capítulo serão mostradas as implementações reais de cada algoritmo, acrescidas de comentários que elucidem as escolhas de implementações tomadas. 
+
+\section{Algoritmos de Árvore Geradora Mínima}
+\section{Algoritmos de Caminho Mais Curto}
+\subsection{Algoritmo de Dijkstra}
+Para a implementação de Dijkstra foi elaborado o seguinte iterador:
+\begin{lstlisting}[language=Rust, caption={Iterador de Dijkstra}]
+#[derive(Debug)]
+pub struct DijkstraIter<'a, T, G>
+where
+    T: Node,
+    G: Graph<T>,
+{
+    graph: &'a G,
+    visited: HashSet<T>,
+    distance: HashMap<T, i32>,
+    parent: HashMap<T, Option<T>>,
+}
+\end{lstlisting}
+
+Este iterador, além de guardar o grafo original a ser percorrido, guarda um conjunto de vértices visitados, um map/dicionário que contém a distância de cada vértice e um map/dicionário com o predecessor de cada vértice, caso haja. Agora, partindo para a implementação do iterador, temos:
+
+\begin{lstlisting}[language=Rust, caption={Implementação do iterador de Dijkstra}]
+impl<'a, T, G> Iterator for DijkstraIter<'a, T, G>
+where
+    T: Node,
+    G: Graph<T>,
+{
+    type Item = DijkstraEvent<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut unvisited_node: Option<(T, i32)> = None;
+
+        for node in self.graph.nodes() {
+            if !self.visited.contains(&node)
+                && let Some(distance) = self.distance.get(&node)
+                && (unvisited_node.is_none()
+                    || (unvisited_node.is_some() && distance < &unvisited_node.unwrap().1))
+            {
+                unvisited_node = Some((node, *distance));
+            }
+        }
+
+        match unvisited_node {
+            None => None,
+            Some((node, node_weight)) => {
+                self.visited.insert(node);
+
+                if let Some(neighbors) = self.graph.neighbors(node) {
+                    for (neighbor, edge_weight) in neighbors {
+                        if !self.visited.contains(&neighbor) {
+                            let new_distance = edge_weight + node_weight;
+
+                            match self.distance.get(&neighbor) {
+                                Some(&neighbor_distance) => {
+                                    if neighbor_distance > new_distance {
+                                        self.distance.insert(neighbor, new_distance);
+                                        self.parent.insert(neighbor, Some(node));
+                                    }
+                                }
+                                None => {
+                                    self.distance.insert(neighbor, new_distance);
+                                    self.parent.insert(neighbor, Some(node));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                let mut parent: Option<T> = None;
+                if let Some(opt) = self.parent.get(&node) {
+                    parent = *opt;
+                }
+
+                Some(DijkstraEvent::Discover((node, node_weight, parent)))
+            }
+        }
+    }
+}
+\end{lstlisting}
+
+A cada passo do iterador, ele calcula qual é o nó disponível com menor distância, adiciona-o no conjunto dos visitados, realiza o relaxamento de seus vizinhos e retorna o novo vértice do caminho mais curto junto de sua distância e de seu predecessor, caso haja. Caso não haja mais nós disponíveis no início do algoritmo, o iterador retorna \texttt{None}, indicando o fim do algoritmo.
+
+Os consumidores deste iterador serão capazes de montar o caminho mais curto a partir do retorno de cada iteração, onde é retornada uma tripla com o nó que foi visitado, a distância até ele e o seu predecessor. Para encontrar o caminho mais curto entre dois nós, por exemplo, basta salvar todos estes retornos, acessar o elemento que contém o nó final da busca, capturar seu predecessor e explorá-lo até encontrar o nó inicial.
+
+\section{Algoritmos de Grafos Eulerianos}
