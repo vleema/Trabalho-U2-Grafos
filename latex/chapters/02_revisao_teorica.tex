@@ -1,2 +1,300 @@
 \chapter{Revisão teórica}
 \label{ch:revisão}
+
+Todas as definições e teoremas são retirados diretamente ou readaptados para melhor clareza de \cite{diestel2025}, \cite{polya2010}, \cite{jensen2010} e \cite{gersting1995}. Como os algoritmos são implementados em inglês, apresentaremos o correspondente ao termo em inglês.
+
+\begin{mydef}[Grafo]
+  Um \emph{grafo} (\textit{graph}) é uma estrutura $G := (V, A)$
+  tal que $A \subseteq V^2$ e $V$ é um conjunto de um tipo qualquer.
+  Os elementos de $V$ são denominados vértices (\textit{nodes}) e os
+  elementos de $A$ são denominados de arestas
+  (\textit{edges}). O jeito tradicional de visualizar um
+  grafo é como uma figura composta de bolas e setas:
+  \begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+      \GraphInit[vstyle=normal]
+      \tikzset{EdgeStyle/.style={->}}
+      \Vertices{circle}{1,2,3,4}
+      \Edges(1,2,3)
+      \Edge(1)(4)
+    \end{tikzpicture}
+    \caption{Um grafo com $V := \{1,2,3,4\}$ e $A :=
+        \{(1,2),(1,4),(2,3)\}.$}
+    \label{fig:graph1}
+  \end{figure}
+  \FloatBarrier
+\end{mydef}
+
+\begin{mydef}[Grafo rotulado]
+  Dizemos que um grafo $G := (V, A)$ é \emph{rotulado} quando há informações de identificação (rótulos) nos vértices do grafo. Tais rótulos podem ser numéricos ou alfabéticos.
+\end{mydef}
+
+\begin{mydef}[Grafo ponderado]
+	Dizemos que um grafo $G := (V, A)$ é \emph{ponderado} (\textit{weighted}) quando há pesos associados a todas as arestas do grafo.
+\end{mydef}
+
+\begin{mydef}[Ordem e Tamanho]
+  O número de vértices de um grafo $G$ é chamado de \emph{ordem}
+  (\textit{order}) e é denotado por $|G|$ -- o número de arestas é chamado de
+  \emph{tamanho} (\textit{size}) e é denotado por $||G||$. Por exemplo, na
+  Figura~\ref{fig:graph1}, $|G| = 4$ e $||G|| = 3$.
+\end{mydef}
+
+\begin{mydef}[Adjacência]
+  Dizemos que um vértice $v$ é \emph{adjacente}, ou \emph{vizinho},
+  de um vértice
+  $u$ (\textit{neighbor}) se somente se $(u,v) \in A$, também,
+  denotaremos $(u,v)$ como $uv$. Visualmente,
+  enxergamos isso como:
+  \begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+      \GraphInit[vstyle=normal]
+      \tikzset{EdgeStyle/.style={->}}
+      \Vertices{circle}{v,u}
+      \Edge(u)(v)
+    \end{tikzpicture}
+    \caption{Um grafo com $V := \{u,v\}$ e $A :=
+        \{(u,v)\}.$}
+  \end{figure}
+  \FloatBarrier
+\end{mydef}
+
+\begin{mydef}[Conjunto de adjacentes]
+  Num grafo $G$, o conjunto de todos os vértices adjacentes de $u$
+  (\textit{neighbors}) é denotado por $A_G(u) := \{v \in V\, |\, uv \in
+    A\}$. Já o conjunto de todos os vértices que em que $v$ é adjacente
+  será denotado por $\bar{A}_G(u) := \{ v \in V\, |\, vu \in A\}$.
+\end{mydef}
+
+\begin{mydef}[Grau de um vértice]
+  O \emph{grau de um vértice} $v$ (\textit{node degree}) é o valor
+  correspondente da soma $|A_G(v)| + |\bar{A}_G(v)|$. Também
+  denotamos $|A_G(v)|$ como $d^+(v)$, $|\bar{A}_G(v)|$ como $d^-(v)$ e
+  sua soma como $d(v)$.
+\end{mydef}
+
+\begin{mydef}[Grafo não direcionado]
+  Dizemos que um grafo $G$ é \emph{não direcionado}
+  (\textit{undirected}) se somente se $A$ é simétrico, ou seja, se
+  $uv \in A$ então $vu \in A$. O nome não direcionado vem da ideia de
+  que os grafos que viemos discutindo até agora são denomidados de
+  \emph{direcionados}, ou simplesmente \emph{dígrafos}. Na
+  literatura é comum apresentar grafo não direcionado como grafo e
+  depois o direcionado como dígrafo, resolvemos inverter a ordem pois
+  assim se traduz melhor nas representações de grafos que vamos
+  implementar. Um grafo não direcionado pode ser visualizado sem a
+  ponta das setas:
+
+  \begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+      \GraphInit[vstyle=normal]
+      \Vertices{circle}{c,b,a}
+      \Edges(a,b,c)
+    \end{tikzpicture}
+    \caption{Um grafo não direcionado com $V := \{a,b,c\}$ e $A :=
+        \{ab,ba,bc,cb\}$}
+    \label{fig:ungraph1}
+  \end{figure}
+
+  Também é comum omitir a simetria das arestas se pelo contexto for claro que
+  está sendo tratado de um grafo não direcionado, na Figura~\ref{fig:ungraph1}, o
+  conjunto de arestas $A$ seria escrito como $\{ab,bc\}$.
+\end{mydef}
+
+\begin{mydef}[Caminho]
+  Um \emph{caminho} (\textit{path}) é um grafo $C := (V, A)$ que tem a forma:
+  \begin{displaymath}
+    V := \{x_0, x_1,...,x_k\} \qquad A := \{x_0x_1,x_1x_2,...,x_{k-1}x_k\}
+  \end{displaymath}
+  Dizemos que $C$ é um caminho de $x_0$ a $x_k$. Normalmente nos
+  referimos ao caminho como a sequência dos seus vértices, $x_0x_1...x_k$.
+\end{mydef}
+
+\begin{mydef}[Conectividade]
+  Dizemos que um grafo $G$ é \emph{conexo} (\textit{connected}) se somente
+  se para quaisquer dois vértices $u$ e $v$, existe um caminho entre eles.
+\end{mydef}
+
+\begin{mydef}[Ciclo]
+	Dizemos que um grafo $G:= (V, A)$ contém um \emph{ciclo} (\textit{cycle}) quando há um caminho possível do vértice $v_i$ até ele próprio sem passar mais de uma vez por vértices intermediários. Quando não há ciclos no grafo, dizemos que ele é \emph{acíclico}.
+\end{mydef}
+
+\begin{mydef}[Caminho Euleriano]
+	Um \emph{Caminho Euleriano} (\textit{Eulerian Path}) em um grafo $G := (V, A)$ é um caminho que usa cada uma das arestas de $G$ exatamente 1 vez.
+  \begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+      \GraphInit[vstyle=normal]
+      \tikzset{EdgeStyle/.style={->}}
+      \Vertices{circle}{1,2,3,4}
+      \Edges(1,2,3,4,1,3)
+    \end{tikzpicture}
+    \caption{Um grafo com $V := \{1,2,3,4\}$ e $A := \{(1,2),(2,3),(3,4),(4,1),(1,3)\}$.
+      O caminho $1 \to 2 \to 3 \to 4 \to 1 \to 3$ é um exemplo de caminho euleriano.}
+    \label{fig:eulerian-path}
+  \end{figure}
+  \FloatBarrier
+\end{mydef}
+
+\begin{mytherm}[Teorema dos Caminhos Eulerianos]
+	Existe um caminho euleriano em um grafo não direcionado $G := (V, A)$ se e somente se existir exatamente 0 ou 2 vértices de grau ímpar no grafo. Existe um caminho euleriano em um grafo direcionado $G := (V_2, A_2)$ se e somente se existe no máximo 1 vértice com grau de saída maior que grau de entrada por 1 e no máximo 1 vértice com grau de entrada menor que grau de saída por 1.
+\end{mytherm}
+
+\begin{mydef}[Ciclo Euleriano]
+	Um \emph{Ciclo Euleriano} (\textit{Eulerian Cycle}) em um grafo $G := (V, A)$ é um caso particular do Caminho Euleriano onde o Caminho inicia e termina no mesmo vértice $v$.
+\end{mydef}
+
+\begin{mydef}[Grafo Euleriano]
+  Dizemos que um grafo $G := (V, A)$ é um \emph{Grafo Euleriano} (\textit{Eulerian Graph}) se o grafo contém um Ciclo Euleriano.
+  \begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+      \GraphInit[vstyle=normal]
+      \tikzset{EdgeStyle/.style={->}}
+      \Vertices{circle}{A,B,C,D}
+      \Edges(A,B,C,A,B,D,A)
+			\draw[->, bend right=20] (A) to (B);
+			%\Edge[bend right=15](A)(B)
+			%\Edge(C, A)
+			%\Edge(B, D)
+			%\Edge(D, A)
+    \end{tikzpicture}
+		\caption{Um grafo euleriano com $V := \{A, B, C, D\}$ e $A := \{(A, B), (A, B), (B, C), (C, A), (B, D), (D,A)\}$.
+      Exemplo de ciclo euleriano: $A \to B \to C \to A \to B \to D \to A$.}
+    \label{fig:eulerian-graph}
+  \end{figure}
+  \FloatBarrier
+\end{mydef}
+
+\begin{mytherm}[Teorema do Grafo Euleriano]
+	Um grafo conexo não orientado $G_1 := (V_1, A_1)$ é Euleriano se e somente se todos os vértices tem grau par. Um grafo conexo orientado $G_2 := (V_2, A_2)$ é Euleriano se e somente se todos os vértices tem o mesmo grau de entrada e saída.
+\end{mytherm}
+
+\begin{mydef}[Caminho Mais Curto]
+  O \emph{Caminho Mais Curto} (\textit{Shortest Path}) em um grafo ponderado $G := (V, A)$ é o caminho entre dois vértices $v_i, v_j \in V$ que acumula o menor peso possível dentre todos os demais caminhos entre os dois vértices.
+\end{mydef}
+
+\begin{mydef}[Subgrafo]
+	Dizemos que $G':= (V', A')$ é \emph{subgrafo} (\textit{subgraph}) de um grafo $G:= (V, A)$ quando $G'$ consiste em um subconjunto de vértices e arestas do grafo original, mas preservando a adjacência entre os vértices.
+	\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+      \GraphInit[vstyle=normal]
+      \tikzset{EdgeStyle/.style={->}}
+
+      \Vertices{circle}{A,B,C,D,E}
+
+      % Arestas do grafo G
+      \Edges(A,B,C,D,E,A)
+      \Edges(B,D)
+    \end{tikzpicture}
+
+    \caption{Grafo $G$ com $V = \{A,B,C,D,E\}$ e
+      $A = \{(A,B), (B,C), (C,D), (D,E), (E,A), (B,D)\}$.}
+    \label{fig:subgraph-g}
+  \end{figure}
+
+  \begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+      \GraphInit[vstyle=normal]
+      \tikzset{EdgeStyle/.style={->}}
+
+      % Subconjunto de vértices
+      \Vertices{circle}{A,B,D,E}
+
+      % Arestas do subgrafo G'
+      \Edges(A,B,D,E,A)
+    \end{tikzpicture}
+
+    \caption{Subgrafo $G'$, com $V' = \{A,B,D,E\}$ e
+			$A' = \{(A,B), (B,D), (D,E), (E,A)\}$, preservando as adjacências de $G$.}
+    \label{fig:subgraph-gp}
+  \end{figure}
+
+  \FloatBarrier
+\end{mydef}
+
+\begin{mydef}[Árvore]
+  Dizemos que um grafo $G := (V, A)$ é uma \emph{árvore} (\textit{tree}) quando $G$ é acíclico e conexo. Além disso, dizemos que a árvore é enraizada quando fixamos um vértice como \emph{raiz} (\textit{root}) ou não-enraizada quando não há raiz.
+	\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}
+    \GraphInit[vstyle=normal]
+    \tikzset{EdgeStyle/.style={->}}
+
+    % Posições manuais para formar uma árvore em níveis
+    \Vertex[x=0, y=2]{A}
+    \Vertex[x=-1.5, y=0.8]{B}
+    \Vertex[x=1.5, y=0.8]{C}
+    \Vertex[x=-2.5, y=-0.8]{D}
+    \Vertex[x=-0.5, y=-0.8]{E}
+    \Vertex[x=1.5, y=-0.8]{F}
+
+    \Edges(A,B)
+    \Edges(A,C)
+    \Edges(B,D)
+    \Edges(B,E)
+    \Edges(C,F)
+  \end{tikzpicture}
+
+  \caption{Árvore enraizada em $A$.}
+\end{figure}
+
+\FloatBarrier
+\end{mydef}
+
+\begin{mydef}[Árvore Geradora]
+  Dizemos que $T := (V, A')$ é uma \emph{árvore geradora} de $G := (V, A)$ quando $T$ é um subgrafo de $G$ conexo e acíclico. É uma forma de conectar todos os vértices de um grafo sem ciclos.
+	\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}
+    \GraphInit[vstyle=normal]
+    \tikzset{EdgeStyle/.style={->}}
+
+    \Vertex[x=0, y=2]{A}
+    \Vertex[x=-2, y=1]{B}
+    \Vertex[x=2,  y=1]{C}
+    \Vertex[x=-1, y=0]{D}
+    \Vertex[x=1,  y=0]{E}
+
+    \Edges(A,B)
+    \Edges(B,C)
+    \Edges(C,A)
+    \Edges(B,D)
+    \Edges(C,E)
+    \Edges(D,E)
+  \end{tikzpicture}
+
+  \caption{Grafo $G$, note a existência do ciclo $A \to B \to C \to A$}
+\end{figure}
+
+	\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}
+    \GraphInit[vstyle=normal]
+    \tikzset{EdgeStyle/.style={->}}
+
+    \Vertex[x=0, y=2]{A}
+    \Vertex[x=0, y=1]{B}
+    \Vertex[x=-1.5, y=0]{C}
+    \Vertex[x=1.5, y=0]{D}
+    \Vertex[x=-1.5, y=-1]{E}
+
+		\Edge(A)(B)
+		\Edge(B)(C)
+		\Edge(B)(D)
+		\Edge(C)(E)
+  \end{tikzpicture}
+
+  \caption{Árvore geradora $T$ de $G$. Note que não há mais ciclos.}
+\end{figure}
+\FloatBarrier
+\end{mydef}
+
+\begin{mydef}[Árvore Geradora Mínima]
+  Dizemos que $T := (V, A')$ é a árvore geradora mínima (ou AGM) de um grafo ponderado $G := (V, A)$ quando é a árvore geradora de menor custo dentre todas as geradoras de $G$.
+\end{mydef}
