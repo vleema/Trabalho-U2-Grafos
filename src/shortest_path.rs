@@ -109,6 +109,7 @@ where
     }
 }
 
+#[derive(Debug)]
 pub struct FloydWarshallResult<Node, Weight> {
     pub dist: HashMap<Node, HashMap<Node, Weight>>,
     pub pred: HashMap<Node, HashMap<Node, Node>>,
@@ -121,6 +122,9 @@ impl<N: Node, W: Weight> FloydWarshallResult<N, W> {
         for n in g.nodes() {
             let mut neighbors_dist = HashMap::new();
             let mut neighors_pred = HashMap::new();
+
+            neighbors_dist.insert(n, W::zero());
+            neighors_pred.insert(n, n);
 
             for (neighbor, weight) in g.weighted_neighbors(n) {
                 neighbors_dist.insert(neighbor, weight);
@@ -160,6 +164,46 @@ impl<N: Node, W: Weight> FloydWarshallResult<N, W> {
         }
 
         Self { dist, pred }
+    }
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub struct ShortestPathTree<N, W> {
+    pub node: N,
+    pub childs: Vec<(W, ShortestPathTree<N, W>)>,
+}
+
+impl<N: Node, W: Weight> ShortestPathTree<N, W> {
+    pub fn new(g: &(impl WeightedGraph<N, W> + ?Sized), root: N) -> Self {
+        fn build_tree<N: Node, W: Weight>(
+            visited: &mut HashSet<N>,
+            floyd: &FloydWarshallResult<N, W>,
+            tree: &mut ShortestPathTree<N, W>,
+            root: N,
+        ) {
+            for (&k, &w) in &floyd.dist[&tree.node] {
+                if k != tree.node && floyd.pred[&root][&k] == tree.node {
+                    if !visited.insert(k) {
+                        continue;
+                    }
+                    let mut new_child = ShortestPathTree {
+                        node: k,
+                        childs: vec![],
+                    };
+                    build_tree(visited, floyd, &mut new_child, root);
+                    tree.childs.push((w, new_child));
+                }
+            }
+        }
+        let floyd = g.floyd_warshall();
+        let mut tree = ShortestPathTree {
+            node: root,
+            childs: vec![],
+        };
+
+        build_tree(&mut HashSet::from([root]), &floyd, &mut tree, root);
+
+        tree
     }
 }
 
@@ -280,7 +324,7 @@ mod test {
         map.insert('E', vec![('F', 1)]);
         map.insert('F', vec![]);
 
-        let g: AdjacencyList<char, i32> = AdjacencyList(map);
+        let g = AdjacencyList(map);
         let FloydWarshallResult { dist, pred } = g.floyd_warshall();
 
         assert_eq!(dist[&'A'][&'B'], 5); // A -> B
@@ -294,5 +338,69 @@ mod test {
         assert_eq!(pred[&'A'][&'F'], 'E'); // A -> B -> E -> F
 
         assert_eq!(pred[&'F'].get(&'A'), None);
+    }
+
+    #[test]
+    fn shortest_path_tree() {
+        let mut map: HashMap<char, Vec<(char, i32)>> = HashMap::with_capacity(6);
+
+        map.insert('A', vec![('B', 3), ('D', 1)]);
+        map.insert('B', vec![('C', 3)]);
+        map.insert('C', vec![('D', 4)]);
+        map.insert('D', vec![('B', 2), ('E', 6), ('F', 2)]);
+        map.insert('E', vec![('C', 3)]);
+        map.insert('F', vec![('A', 6), ('E', 5)]);
+
+        fn sort_tree<N: Ord + Copy, W: Ord + Copy>(tree: &mut ShortestPathTree<N, W>) {
+            tree.childs.sort_by_key(|(w, _)| *w);
+            for (_, child) in &mut tree.childs {
+                sort_tree(child);
+            }
+        }
+
+        let g = AdjacencyList(map);
+        let expected = ShortestPathTree {
+            node: 'A',
+            childs: vec![
+                (
+                    1,
+                    ShortestPathTree {
+                        node: 'D',
+                        childs: vec![
+                            (
+                                2,
+                                ShortestPathTree {
+                                    node: 'F',
+                                    childs: vec![],
+                                },
+                            ),
+                            (
+                                6,
+                                ShortestPathTree {
+                                    node: 'E',
+                                    childs: vec![],
+                                },
+                            ),
+                        ],
+                    },
+                ),
+                (
+                    3,
+                    ShortestPathTree {
+                        node: 'B',
+                        childs: vec![(
+                            3,
+                            ShortestPathTree {
+                                node: 'C',
+                                childs: vec![],
+                            },
+                        )],
+                    },
+                ),
+            ],
+        };
+        let mut result = g.shortest_path_tree('A');
+        sort_tree(&mut result);
+        assert_eq!(expected, result);
     }
 }

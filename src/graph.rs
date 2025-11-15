@@ -2,7 +2,7 @@ use num_traits::{Bounded, CheckedAdd, One, Zero};
 
 use crate::{
     graphs::{BfsIter, BiconnectedComponentsIter, DfsEdgesIter, DfsIter, DijkstraIter, Edge},
-    shortest_path::FloydWarshallResult,
+    shortest_path::{FloydWarshallResult, ShortestPathTree},
 };
 use std::hash::Hash;
 
@@ -187,5 +187,9 @@ pub trait WeightedGraph<N: Node, W: Weight>: Graph<N> {
 
     fn floyd_warshall(&self) -> FloydWarshallResult<N, W> {
         FloydWarshallResult::new(self)
+    }
+
+    fn shortest_path_tree(&self, root: N) -> ShortestPathTree<N, W> {
+        ShortestPathTree::new(self, root)
     }
 }
