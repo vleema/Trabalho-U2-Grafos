@@ -30,7 +30,7 @@ where
 pub struct DfsIter<'a, N, G>
 where
     N: Node,
-    G: Graph<N>,
+    G: Graph<N> + ?Sized,
     Self: 'a,
 {
     graph: &'a G,
@@ -42,7 +42,7 @@ where
 impl<'a, N, G> DfsIter<'a, N, G>
 where
     N: Node,
-    G: Graph<N>,
+    G: Graph<N> + ?Sized,
 {
     /// Creates a new DFS iterator starting from the given node.
     pub fn new(graph: &'a G, start: N) -> Self {
@@ -66,7 +66,7 @@ where
 impl<'a, N, G> Iterator for DfsIter<'a, N, G>
 where
     N: Node,
-    G: Graph<N>,
+    G: Graph<N> + ?Sized,
 {
     type Item = DfsEvent<N>;
 
@@ -110,38 +110,39 @@ where
 ///   The `Vec<Node>` represents the node's neighbors that will be explored on BFS tree.
 /// - `CrossEdge(Node, Node)`: Indicates that a node has an edge to another and neither is an ancestor of the other.
 #[derive(Debug)]
-pub enum BfsEvent<T>
+pub enum BfsEvent<N>
 where
-    T: Node,
+    N: Node,
 {
-    Discover(T, Vec<T>),
-    CrossEdge(T, T),
+    Discover(N, Vec<N>),
+    CrossEdge(N, N),
 }
 
 /// Represents a iterator over a breadth-first-search (BFS) traversal.
 ///
 /// The iteration yields a `BfsEvent<Node>` over each instance of `next`.
-pub struct BfsIter<'a, T, G>
+pub struct BfsIter<'a, N, G>
 where
-    T: Node,
+    N: Node,
+    G: Graph<N> + ?Sized,
 {
     graph: &'a G,
-    queue: VecDeque<T>,
-    visited: HashSet<T>,
-    parent: HashMap<T, Option<T>>,
+    queue: VecDeque<N>,
+    visited: HashSet<N>,
+    parent: HashMap<N, Option<N>>,
 }
 
-impl<'a, T, G> BfsIter<'a, T, G>
+impl<'a, N, G> BfsIter<'a, N, G>
 where
-    T: Node,
-    G: Graph<T>,
+    N: Node,
+    G: Graph<N> + ?Sized,
 {
     /// Creates a new BFS iterator starting from the given node.
-    pub fn new(graph: &'a G, start: T) -> Self {
+    pub fn new(graph: &'a G, start: N) -> Self {
         let mut visited = HashSet::with_capacity(graph.order());
         visited.insert(start);
 
-        let mut parent: HashMap<T, Option<T>> = HashMap::with_capacity(graph.order());
+        let mut parent: HashMap<N, Option<N>> = HashMap::with_capacity(graph.order());
         parent.insert(start, None);
 
         Self {
@@ -153,17 +154,17 @@ where
     }
 }
 
-impl<'a, T, G> Iterator for BfsIter<'a, T, G>
+impl<'a, N, G> Iterator for BfsIter<'a, N, G>
 where
-    T: Node,
-    G: Graph<T>,
+    N: Node,
+    G: Graph<N> + ?Sized,
 {
-    type Item = Vec<BfsEvent<T>>;
+    type Item = Vec<BfsEvent<N>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let node = self.queue.pop_front()?;
-        let mut children: Vec<T> = Vec::new();
-        let mut events: Vec<BfsEvent<T>> = Vec::new();
+        let mut children: Vec<N> = Vec::new();
+        let mut events: Vec<BfsEvent<N>> = Vec::new();
 
         for n in self.graph.neighbors(node) {
             if self.visited.insert(n) {
@@ -194,15 +195,15 @@ where
 /// - `Forward(u, v)`: An edge from a node `u` to its descendant `v` that is not a tree edge.
 /// - `Cross(u, v)`: An edge between two nodes `u` and `v` such that neither is an ancestor of the other.
 #[derive(Debug)]
-pub enum Edge<T>
+pub enum Edge<N>
 where
-    T: Node,
+    N: Node,
 {
-    Tree(T, T),
-    Back(T, T),
-    ParentBack(T, T),
-    Forward(T, T),
-    Cross(T, T),
+    Tree(N, N),
+    Back(N, N),
+    ParentBack(N, N),
+    Forward(N, N),
+    Cross(N, N),
 }
 
 /// An iterator that performs a depth-first search (DFS) and classifies the edges of the graph.
@@ -210,27 +211,27 @@ where
 /// This iterator wraps a `DfsIter` and uses its events to classify each edge of the
 /// graph into one of the categories defined by the `Edge` enum. It yields an `Edge<Node>`
 /// for each edge encountered during the traversal.
-pub struct DfsEdgesIter<'a, T, G>
+pub struct DfsEdgesIter<'a, N, G>
 where
-    T: Node,
-    G: Graph<T>,
+    N: Node,
+    G: Graph<N> + ?Sized,
     Self: 'a,
 {
-    iter: DfsIter<'a, T, G>,
+    iter: DfsIter<'a, N, G>,
     time: usize,
-    discovery: HashMap<T, usize>,
-    finish: HashMap<T, usize>,
-    parent: HashMap<T, T>,
-    stack_hash: HashSet<T>,
+    discovery: HashMap<N, usize>,
+    finish: HashMap<N, usize>,
+    parent: HashMap<N, N>,
+    stack_hash: HashSet<N>,
 }
 
-impl<'a, T, G> DfsEdgesIter<'a, T, G>
+impl<'a, N, G> DfsEdgesIter<'a, N, G>
 where
-    T: Node,
-    G: Graph<T>,
+    N: Node,
+    G: Graph<N> + ?Sized,
 {
     /// Creates a new DFS-with-edges iterator starting from the given node.
-    pub fn new(graph: &'a G, start: T) -> Self {
+    pub fn new(graph: &'a G, start: N) -> Self {
         Self {
             iter: DfsIter::new(graph, start),
             time: 0,
@@ -244,17 +245,17 @@ where
     /// Sets the `start_node` field of the inner `DfsIter` manually.
     ///
     /// This enables classifying edges from another components of a graph.
-    pub fn new_start(&mut self, start: T) {
+    pub fn new_start(&mut self, start: N) {
         self.iter.new_start(start);
     }
 }
 
-impl<'a, T, G> Iterator for DfsEdgesIter<'a, T, G>
+impl<'a, N, G> Iterator for DfsEdgesIter<'a, N, G>
 where
-    T: Node,
-    G: Graph<T>,
+    N: Node,
+    G: Graph<N> + ?Sized,
 {
-    type Item = Edge<T>;
+    type Item = Edge<N>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(event) = self.iter.next() {
@@ -307,7 +308,7 @@ where
 pub struct BiconnectedComponentsIter<'a, T, G>
 where
     T: Node,
-    G: Graph<T>,
+    G: Graph<T> + ?Sized,
     Self: 'a,
 {
     iter: DfsIter<'a, T, G>,
@@ -318,13 +319,13 @@ where
     edge_stack: Vec<(T, T)>,
 }
 
-impl<'a, T, G> BiconnectedComponentsIter<'a, T, G>
+impl<'a, N, G> BiconnectedComponentsIter<'a, N, G>
 where
-    T: Node,
-    G: Graph<T> + 'a,
+    N: Node,
+    G: Graph<N> + 'a + ?Sized,
 {
     /// Creates a new iterator over the biconnected components of an undirected graph
-    pub fn new(graph: &'a G, start: T) -> Self {
+    pub fn new(graph: &'a G, start: N) -> Self {
         Self {
             iter: graph.dfs(start),
             time: 0,
@@ -336,7 +337,7 @@ where
     }
 
     /// Extracts a biconnected component from the edge stack.
-    fn extract_component(&mut self, u: T, v: T) -> Option<Vec<(T, T)>> {
+    fn extract_component(&mut self, u: N, v: N) -> Option<Vec<(N, N)>> {
         let mut component = Vec::new();
         while let Some(edge) = self.edge_stack.pop() {
             component.push(edge);
@@ -348,12 +349,12 @@ where
     }
 }
 
-impl<'a, T, G> Iterator for BiconnectedComponentsIter<'a, T, G>
+impl<'a, N, G> Iterator for BiconnectedComponentsIter<'a, N, G>
 where
-    T: Node,
-    G: Graph<T>,
+    N: Node,
+    G: Graph<N> + ?Sized,
 {
-    type Item = Vec<(T, T)>;
+    type Item = Vec<(N, N)>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(event) = self.iter.next() {

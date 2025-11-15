@@ -18,7 +18,7 @@ pub struct DijkstraIter<'a, N, W, G>
 where
     N: Node,
     W: Weight,
-    G: WeightedGraph<N, W>,
+    G: WeightedGraph<N, W> + ?Sized,
 {
     graph: &'a G,
     visited: HashSet<N>,
@@ -30,7 +30,7 @@ impl<'a, N, W, G> DijkstraIter<'a, N, W, G>
 where
     N: Node,
     W: Weight,
-    G: WeightedGraph<N, W>,
+    G: WeightedGraph<N, W> + ?Sized,
 {
     pub fn new(graph: &'a G, start: N) -> Self {
         let visited: HashSet<N> = HashSet::new();
@@ -57,7 +57,7 @@ impl<'a, N, W, G> Iterator for DijkstraIter<'a, N, W, G>
 where
     N: Node,
     W: Weight,
-    G: WeightedGraph<N, W>,
+    G: WeightedGraph<N, W> + ?Sized,
 {
     type Item = DijkstraEvent<N, W>;
 

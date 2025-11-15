@@ -94,30 +94,21 @@ pub trait Graph<N: Node> {
     /// Returns an iterator that performs a **depth-first search (DFS)** starting from `start`.
     ///
     /// The iterator yields [`DfsEvent`] values that represent the traversal steps.
-    fn dfs(&self, start: N) -> DfsIter<'_, N, Self>
-    where
-        Self: Sized,
-    {
+    fn dfs(&self, start: N) -> DfsIter<'_, N, Self> {
         DfsIter::new(self, start)
     }
 
     /// Returns an iterator that performs a **breadth-first search (BFS)** starting from `start`.
     ///
     /// The iterator yields [`BfsEvent`] values for each level of the search.
-    fn bfs(&self, start: N) -> BfsIter<'_, N, Self>
-    where
-        Self: Sized,
-    {
+    fn bfs(&self, start: N) -> BfsIter<'_, N, Self> {
         BfsIter::new(self, start)
     }
 
     /// Returns an iterator that classifies all edges encountered during a DFS traversal.
     ///
     /// The classification follows standard DFS rules, producing edges of type ['Edge']
-    fn classify_edges(&self, start: N) -> DfsEdgesIter<'_, N, Self>
-    where
-        Self: Sized,
-    {
+    fn classify_edges(&self, start: N) -> DfsEdgesIter<'_, N, Self> {
         DfsEdgesIter::new(self, start)
     }
 }
@@ -139,10 +130,7 @@ pub trait UndirectedGraph<N: Node>: Graph<N> {
     /// Returns an iterator over the **biconnected components** of the graph.
     ///
     /// The traversal starts from the given `start` node.
-    fn biconnected_components(&self, start: N) -> BiconnectedComponentsIter<'_, N, Self>
-    where
-        Self: Sized,
-    {
+    fn biconnected_components(&self, start: N) -> BiconnectedComponentsIter<'_, N, Self> {
         BiconnectedComponentsIter::new(self, start)
     }
 
@@ -174,7 +162,6 @@ pub trait UndirectedGraph<N: Node>: Graph<N> {
     /// as these represent meaningful relations in undirected graphs.
     fn classify_undirected_edges<'a>(&'a self, start: N) -> impl Iterator<Item = Edge<N>>
     where
-        Self: Sized,
         N: 'a,
     {
         DfsEdgesIter::new(self, start)
@@ -194,10 +181,7 @@ pub trait WeightedGraph<N: Node, W: Weight>: Graph<N> {
 
     fn add_weighted_edge(&mut self, n: N, m: N, w: W);
 
-    fn djikstra(&self, start: N) -> DijkstraIter<'_, N, W, Self>
-    where
-        Self: Sized,
-    {
+    fn djikstra(&self, start: N) -> DijkstraIter<'_, N, W, Self> {
         DijkstraIter::new(self, start)
     }
 
