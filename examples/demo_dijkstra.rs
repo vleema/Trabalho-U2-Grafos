@@ -1,90 +1,61 @@
-use graphs_algorithms::Graph;
+use std::collections::HashMap;
+
 use graphs_algorithms::WeightedGraph;
 use graphs_algorithms::graphs::AdjacencyList;
-use graphs_algorithms::graphs::DijkstraEvent;
-use std::collections::HashMap;
+use graphs_algorithms::graphs::DijkstraResult;
 
 fn main() {
     println!("Bem vindo à execução do algoritmo de Dijkstra!");
-    let mut g: AdjacencyList<usize, i32> = AdjacencyList::new();
 
-    let edges = vec![
-        (1, 6, 3),
-        (1, 11, 1),
-        (2, 1, 2),
-        (2, 6, 7),
-        (2, 3, 8),
-        (3, 2, 1),
-        (3, 8, 10),
-        (3, 4, 2),
-        (4, 9, 9),
-        (4, 10, 7),
-        (4, 13, 15),
-        (5, 4, 4),
-        (6, 3, 9),
-        (6, 7, 2),
-        (7, 8, 8),
-        (7, 12, 1),
-        (8, 9, 7),
-        (9, 3, 2),
-        (9, 14, 1),
-        (10, 5, 5),
-        (10, 14, 6),
-        (10, 15, 9),
-        (11, 6, 0),
-        (11, 16, 2),
-        (12, 11, 4),
-        (12, 17, 1),
-        (13, 7, 5),
-        (13, 18, 4),
-        (14, 15, 1),
-        (14, 19, 18),
-        (16, 12, 3),
-        (17, 12, 1),
-        (17, 19, 5),
-        (18, 9, 2),
-        (18, 17, 20),
-    ];
+    let mut map :HashMap<usize, Vec<(usize, i32)>> = HashMap::new();
+    map.insert(1, vec![(11, 1), (6, 3)]);
+    map.insert(2, vec![(1, 2), (3,8), (6, 7)]);
+    map.insert(3, vec![(2, 1), (8, 10), (4, 2)]);
+    map.insert(4, vec![(9, 9), (10, 7), (13, 15)]);
+    map.insert(5, vec![(4, 4)]);
+    map.insert(6, vec![(3, 9), (7, 2)]);
+    map.insert(7, vec![(12, 1), (8,8)]);
+    map.insert(8, vec![(9, 7)]);
+    map.insert(9, vec![(14, 1), (3, 2)]);
+    map.insert(10, vec![(15, 9), (14, 6)]);
+    map.insert(11, vec![(6, 0), (16, 2)]);
+    map.insert(12, vec![(11, 4), (17, 1)]);
+    map.insert(13, vec![(18, 4), (7, 5)]);
+    map.insert(14, vec![(15, 1), (19, 18)]);
+    map.insert(15, vec![]);
+    map.insert(16, vec![(12, 3)]);
+    map.insert(17, vec![(12, 1), (19,5)]);
+    map.insert(18, vec![(17, 20), (9, 2)]);
+    map.insert(19, vec![]);
 
-    for i in 1..=19 {
-        g.add_node(i);
-    }
+    let g: AdjacencyList<usize, i32> = AdjacencyList(map);
 
-    for (u, v, w) in edges {
-        g.add_weighted_edge(u, v, w);
-    }
-
-    let mut discovered_edges: HashMap<usize, (Option<usize>, i32)> = HashMap::new();
-    for event in g.djikstra(1) {
-        match event {
-            DijkstraEvent::Finish => {}
-            DijkstraEvent::Discover((u, w, v)) => {
-                discovered_edges.insert(u, (v, w));
-            }
-        }
-    }
-
-    // TODO: investigar problema de None e unwrap.
-    println!("O caminho mais curto entre s = 1 e fim = 15 é: ");
+    let start = 1; 
+    let mut end = 15;
+    let DijkstraResult { route} = g.dijkstra(start);
+    println!("Esse é o caminho entre o início = 1 e fim = 15: ");
     let mut path: Vec<(usize, usize)> = vec![];
-    let mut start: usize = 15;
-    let distance = discovered_edges.get(&start).unwrap().1;
+
     loop {
-        let node = discovered_edges.get(&start).unwrap();
-        match node.0 {
+        if let Some(node) = route.get(&end) {
+
+        match node.1 {
             Some(parent) => {
-                path.push((parent, start));
-                start = parent;
+                path.push((parent, end));
+                end = parent;
             }
             None => {
                 break;
             }
         }
+        }
+        else { break;}
     }
-    path.sort_by(|n1, n2| n1.0.cmp(&n2.0));
+    path.reverse();
     for edge in path {
         print!("{:?} ", edge);
     }
     println!();
-    println!("Custo: {}", distance);
+    println!("Custo: {}", route.get(&15).unwrap().0)
+
 }

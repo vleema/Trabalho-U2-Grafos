@@ -3,109 +3,70 @@ use crate::graph::Weight;
 use crate::graph::WeightedGraph;
 use std::collections::{HashMap, HashSet};
 
-#[derive(Debug)]
-pub enum DijkstraEvent<N, W>
-where
-    N: Node,
-    W: Weight,
-{
-    Discover((N, W, Option<N>)),
-    Finish,
+pub struct DijkstraResult<Node, Weight> {
+    pub route: HashMap<Node, (Weight, Option<Node>)>,
 }
 
-#[derive(Debug)]
-pub struct DijkstraIter<'a, N, W, G>
-where
-    N: Node,
-    W: Weight,
-    G: WeightedGraph<N, W> + ?Sized,
-{
-    graph: &'a G,
-    visited: HashSet<N>,
-    distance: HashMap<N, W>,
-    parent: HashMap<N, Option<N>>,
-}
-
-impl<'a, N, W, G> DijkstraIter<'a, N, W, G>
-where
-    N: Node,
-    W: Weight,
-    G: WeightedGraph<N, W> + ?Sized,
-{
-    pub fn new(graph: &'a G, start: N) -> Self {
-        let visited: HashSet<N> = HashSet::new();
+impl<N: Node, W: Weight> DijkstraResult<N, W> {
+    pub fn new(graph: &(impl WeightedGraph<N, W> + ?Sized), start: N) -> Self {
+        let mut route: HashMap<N, (W, Option<N>)> = HashMap::new();
+        let mut visited: HashSet<N> = HashSet::new();
         let mut distance: HashMap<N, W> = HashMap::new();
-        let mut parent: HashMap<N, Option<N>> = HashMap::new();
+        let mut pred: HashMap<N, Option<N>> = HashMap::new();
         distance.insert(start, W::zero());
-        parent.insert(start, None);
+        pred.insert(start, None);
 
         for (neighbor, weight) in graph.weighted_neighbors(start) {
-            parent.insert(neighbor, Some(start));
+            pred.insert(neighbor, Some(start));
             distance.insert(neighbor, weight);
         }
 
-        Self {
-            graph,
-            visited,
-            distance,
-            parent,
-        }
-    }
-}
-
-impl<'a, N, W, G> Iterator for DijkstraIter<'a, N, W, G>
-where
-    N: Node,
-    W: Weight,
-    G: WeightedGraph<N, W> + ?Sized,
-{
-    type Item = DijkstraEvent<N, W>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let mut unvisited_node: Option<(N, W)> = None;
-
-        for node in self.graph.nodes() {
-            if !self.visited.contains(&node)
-                && let Some(distance) = self.distance.get(&node)
-                && (unvisited_node.is_none()
-                    || (unvisited_node.is_some() && distance < &unvisited_node.unwrap().1))
-            {
-                unvisited_node = Some((node, *distance));
+        loop {
+            let mut unvisited_node: Option<(N, W)> = None;
+            for node in graph.nodes() {
+                if !visited.contains(&node)
+                    && let Some(distance) = distance.get(&node)
+                    && (unvisited_node.is_none()
+                        || (unvisited_node.is_some() && distance < &unvisited_node.unwrap().1))
+                {
+                    unvisited_node = Some((node, *distance));
+                }
             }
-        }
 
-        match unvisited_node {
-            None => None,
-            Some((node, node_weight)) => {
-                self.visited.insert(node);
+            match unvisited_node {
+                None => break,
+                Some((node, node_weight)) => {
+                    visited.insert(node);
 
-                for (neighbor, weight) in self.graph.weighted_neighbors(node) {
-                    if !self.visited.contains(&neighbor) {
-                        let new_distance = weight + node_weight;
+                    for (neighbor, weight) in graph.weighted_neighbors(node) {
+                        if !visited.contains(&neighbor) {
+                            let new_distance = weight + node_weight;
 
-                        match self.distance.get(&neighbor) {
-                            Some(&neighbor_distance) => {
-                                if neighbor_distance > new_distance {
-                                    self.distance.insert(neighbor, new_distance);
-                                    self.parent.insert(neighbor, Some(node));
+                            match distance.get(&neighbor) {
+                                Some(&neighbor_distance) => {
+                                    if neighbor_distance > new_distance {
+                                        distance.insert(neighbor, new_distance);
+                                        pred.insert(neighbor, Some(node));
+                                    }
                                 }
-                            }
-                            None => {
-                                self.distance.insert(neighbor, new_distance);
-                                self.parent.insert(neighbor, Some(node));
+                                None => {
+                                    distance.insert(neighbor, new_distance);
+                                    pred.insert(neighbor, Some(node));
+                                }
                             }
                         }
                     }
-                }
 
-                let mut parent: Option<N> = None;
-                if let Some(opt) = self.parent.get(&node) {
-                    parent = *opt;
-                }
+                    let mut parent: Option<N> = None;
+                    if let Some(opt) = pred.get(&node) {
+                        parent = *opt;
+                    }
 
-                Some(DijkstraEvent::Discover((node, node_weight, parent)))
+                    route.insert(node, (node_weight, parent));
+                }
             }
         }
+        Self { route }
     }
 }
 
@@ -188,37 +149,23 @@ mod test {
         map.insert(7, vec7);
 
         let g: AdjacencyList<usize, i32> = AdjacencyList(map);
-        let mut iter = g.djikstra(1);
+        let DijkstraResult { route } = g.dijkstra(1);
 
-        for event in &mut iter {
-            match event {
-                DijkstraEvent::Discover((node, weight, parent)) => println!(
-                    "Visitamos o vértice {} e agora tem distância {} a partir do predecessor {}",
-                    node,
-                    weight,
-                    parent.unwrap_or(0)
-                ),
-                DijkstraEvent::Finish => {}
-            }
-        }
-        assert_eq!(iter.visited.len(), 7);
-        assert_eq!(iter.distance.len(), 7);
-        assert_eq!(iter.parent.len(), 7);
-        assert_eq!(iter.distance.get(&1), Some(0).as_ref());
-        assert_eq!(iter.distance.get(&2), Some(2).as_ref());
-        assert_eq!(iter.distance.get(&3), Some(4).as_ref());
-        assert_eq!(iter.distance.get(&4), Some(4).as_ref());
-        assert_eq!(iter.distance.get(&5), Some(6).as_ref());
-        assert_eq!(iter.distance.get(&6), Some(7).as_ref());
-        assert_eq!(iter.distance.get(&7), Some(11).as_ref());
-        assert_eq!(iter.parent.get(&1), Some(None).as_ref());
-        assert_eq!(iter.parent.get(&2), Some(Some(1)).as_ref());
-        assert_eq!(iter.parent.get(&3), Some(Some(1)).as_ref());
-        assert_eq!(iter.parent.get(&4), Some(Some(2)).as_ref());
-        assert_eq!(iter.parent.get(&5), Some(Some(4)).as_ref());
-        assert_eq!(iter.parent.get(&6), Some(Some(4)).as_ref());
-        assert_eq!(iter.parent.get(&7), Some(Some(5)).as_ref());
-        println!("Fim das iterações")
+        assert_eq!(route.len(), 7);
+        assert_eq!(route.get(&1).unwrap().0, 0);
+        assert_eq!(route.get(&2).unwrap().0, 2);
+        assert_eq!(route.get(&3).unwrap().0, 4);
+        assert_eq!(route.get(&4).unwrap().0, 4);
+        assert_eq!(route.get(&5).unwrap().0, 6);
+        assert_eq!(route.get(&6).unwrap().0, 7);
+        assert_eq!(route.get(&7).unwrap().0, 11);
+        assert_eq!(route.get(&1).unwrap().1, None);
+        assert_eq!(route.get(&2).unwrap().1, Some(1));
+        assert_eq!(route.get(&3).unwrap().1, Some(1));
+        assert_eq!(route.get(&4).unwrap().1, Some(2));
+        assert_eq!(route.get(&5).unwrap().1, Some(4));
+        assert_eq!(route.get(&6).unwrap().1, Some(4));
+        assert_eq!(route.get(&7).unwrap().1, Some(5));
     }
 
     #[test]
@@ -239,34 +186,21 @@ mod test {
         map.insert('F', vec6);
 
         let g: AdjacencyList<char, i32> = AdjacencyList(map);
-        let mut iter = g.djikstra('A');
-        for event in &mut iter {
-            if let DijkstraEvent::Discover((node, weight, parent)) = event {
-                println!(
-                    "Visitamos o vértice {} e agora tem distância {} a partir do predecessor {}",
-                    node,
-                    weight,
-                    parent.unwrap_or('-')
-                )
-            }
-        }
+        let DijkstraResult { route }= g.dijkstra('A');
 
-        assert_eq!(iter.visited.len(), 6);
-        assert_eq!(iter.distance.len(), 6);
-        assert_eq!(iter.parent.len(), 6);
-        assert_eq!(iter.distance.get(&'A'), Some(0).as_ref());
-        assert_eq!(iter.distance.get(&'B'), Some(5).as_ref());
-        assert_eq!(iter.distance.get(&'C'), Some(2).as_ref());
-        assert_eq!(iter.distance.get(&'D'), Some(9).as_ref());
-        assert_eq!(iter.distance.get(&'E'), Some(7).as_ref());
-        assert_eq!(iter.distance.get(&'F'), Some(8).as_ref());
-        assert_eq!(iter.parent.get(&'A'), Some(None).as_ref());
-        assert_eq!(iter.parent.get(&'B'), Some(Some('A')).as_ref());
-        assert_eq!(iter.parent.get(&'C'), Some(Some('A')).as_ref());
-        assert_eq!(iter.parent.get(&'D'), Some(Some('B')).as_ref());
-        assert_eq!(iter.parent.get(&'E'), Some(Some('B')).as_ref());
-        assert_eq!(iter.parent.get(&'F'), Some(Some('E')).as_ref());
-        println!("Fim das iterações")
+        assert_eq!(route.len(), 6);
+        assert_eq!(route.get(&'A').unwrap().0, 0);
+        assert_eq!(route.get(&'B').unwrap().0, 5);
+        assert_eq!(route.get(&'C').unwrap().0, 2);
+        assert_eq!(route.get(&'D').unwrap().0, 9);
+        assert_eq!(route.get(&'E').unwrap().0, 7);
+        assert_eq!(route.get(&'F').unwrap().0, 8);
+        assert_eq!(route.get(&'A').unwrap().1, None);
+        assert_eq!(route.get(&'B').unwrap().1, Some('A'));
+        assert_eq!(route.get(&'C').unwrap().1, Some('A'));
+        assert_eq!(route.get(&'D').unwrap().1, Some('B'));
+        assert_eq!(route.get(&'E').unwrap().1, Some('B'));
+        assert_eq!(route.get(&'F').unwrap().1, Some('E'));
     }
 
     #[test]
