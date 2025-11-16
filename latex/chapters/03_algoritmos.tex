@@ -122,4 +122,43 @@ Após isso, o algoritmo, tenta inserir todo vértice $k$ no caminho
 entre outros vértices $i$ e $j$ se for vantajoso, atualizando $D$ e
 $P$ no processo.
 
+\subsubsection{Árvore de caminhos mais curtos}
+
+A partir do retorno do algoritmo de Floyd-Warshall, é possível
+construir uma árvore tal que o caminho entre a raiz e qualquer
+vértice, é exatamente o menor caminho entre os dois.
+
+O algoritmo é recursivo, e a ideia geral é: para cada vértice final
+de um caminho viável a partir de uma raiz, construir nó filho
+recursivamente se o vértice predecessor do caminho entre a raiz
+inicial (no caso base da recursão) e o vértice final for igual a raiz
+atual (raiz corrente na recursão). O algoritmo pode ser descrito em
+pseudocódigo da seguinte forma:
+
+% tex-fmt: off
+\begin{algorithm}
+  \caption{Algoritmo de construção da árvore de caminhos mais curtos}
+  \begin{algorithmic}[0]
+    \Require{$G := (V, A, c)$, $r$ e $\mathcal{F}_\mathcal{W} := (D, P)$. Onde $\mathcal{F}_\mathcal{W}$ é o resultado
+      da aplicação de Floyd-Warshall em $G$ e $r$, é a raiz escolhida previamente.}
+      \Ensure{Uma árvore $\mathcal{A} := (n, \mathcal{F})$. Onde $n \in V$ e $\mathcal{F}$ é uma lista de árvores como $\mathcal{A}$.}
+    \State
+    \Function{ConstruirÁrvore}{$G, \mathcal{F}_\mathcal{W}, r, \mathcal{A} := (r, \mathcal{F} := \{\}), \Sigma := \{r\}$}
+      \For{$j \in \{j\, |\, d_{ij} \in D, d_{ij} \neq \lim_{x \to +\infty}x\}$}
+        \If{$j \neq n \land p_{rj} = n$}
+          \If{$j \notin \Sigma$}
+            \State{$\Sigma \gets \Sigma \cup \{j\}$}
+            \State{$\mathcal{F} \gets \mathcal{F} \cup \{\mathsf{ConstruirÁrvore}(G, \mathcal{F}_\mathcal{W}, r, (j, \{\}), \Sigma)\}$}
+          \EndIf
+        \EndIf
+      \EndFor
+      \State \Return $\mathcal{A}$
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+% tex-fmt: on
+
+Naturalmente, para recuperar o caminho mais curto entre $r$ e qualquer outro,
+bastar percorrer a árvore.
+
 \section{Algoritmos em Grafos Eulerianos}
