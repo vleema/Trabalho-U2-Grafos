@@ -16,8 +16,7 @@ pub use graph::WeightedGraph;
 
 pub mod graphs {
     pub use crate::adjacency_list::AdjacencyList;
-    pub use crate::shortest_path::DijkstraEvent;
-    pub use crate::shortest_path::DijkstraIter;
+    pub use crate::shortest_path::DijkstraResult;
     pub use crate::traversal::BfsEvent;
     pub use crate::traversal::BfsIter;
     pub use crate::traversal::BiconnectedComponentsIter;
