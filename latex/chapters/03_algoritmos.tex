@@ -12,7 +12,7 @@ elucidem o funcionamento de cada algoritmo.
 
 \subsection{Algoritmo de Dijkstra}
 \label{sec:pseudocode_dijkstra}
-O algoritmo \cite{dijkstraarticle}, proposto pelo cientista da
+O algoritmo de \cite{dijkstraarticle}, proposto pelo cientista da
 computação Edsger Dijkstra, é um algoritmo extremamente útil para
 encontrar o caminho mais curto dentro de um grafo ponderado orientado
 ou não orientado sem arestas negativas.
@@ -21,10 +21,10 @@ ou não orientado sem arestas negativas.
 \begin{algorithm}
   \caption{Algoritmo de Dijkstra}
   \begin{algorithmic}[0]
-    \Require{$G = (V, A, c)$, $v \in V$}
+    \Require{$G := (V, A, c)$, $v \in V$}
     \Ensure{Sequência de $v \in V$ ordenados que formam o caminho mais curto}
     \Statex
-    \Function{Dijkstra}{G = (V, A, c), s}
+    \Function{Dijkstra}{$G, s$}
       \State{$\mathsf{predecessor} \gets []$}
       \State{$\mathsf{predecessor[s]} \gets \emptyset$}
       \State{$\mathsf{visitado} \gets []$}
@@ -74,13 +74,13 @@ ponto de origem até todos os demais vértices.
 \subsection{Algoritmo de Floyd-Warshall}
 
 O Algoritmo de Robert Floyd e Stephen Warshall, comumente chamado de
-Floyd-Warshall \cite{floydwarshallWikipedia} visa encontrar todos os
+Floyd-Warshall \cite{floydwarshallWikipedia}, visa encontrar todos os
 caminhos mais curtos entre todos os vértices de um grafo ponderado. O
 algoritmo não detecta ciclos negativos, mas não é impedido por sua
 existência, diferentemente de \ref{sec:pseudocode_dijkstra}.
 
-A ideia geral do algoritmo é, para todos os vértices, adicionar um
-vértice intermediário no caminho entre outros dois se a distância
+A ideia geral do algoritmo é: para todos os vértices, adicionar o
+vértice como intermediário no caminho entre outros dois se a distância
 final entre as extremidades for menor. Em termos de pseudocódigo, o
 algoritmo é descrito da seguinte forma:
 
@@ -88,23 +88,23 @@ algoritmo é descrito da seguinte forma:
 \begin{algorithm}
   \caption{Algoritmo de Floyd-Warshall}
   \begin{algorithmic}[0]
-    \Require{$G = (V, A, c)$}
-    \Ensure{Um par $(D, P)$. Onde, para todo $i, j \in V$, $D = [d_{ij}]$
+    \Require{$G := (V, A, c)$}
+    \Ensure{Um par $(D, P)$. Onde, para todo $i, j \in V$, $D := [d_{ij}]$
       e $d_{ij}$ representa as distância entre o vértices $i$ e $j$.
-      $P = [p_{ij}]$ e $p_{ij}$ representa o vértice origem da última
+      $P := [p_{ij}]$ e $p_{ij}$ representa o vértice origem da última
     aresta no caminho de $i$ até $j$.}
     \Statex
-    \Function{Floyd-Warshall}{G = (V, A, c)}
-    \State{$D \gets \{d_{ij}\, |\, i, j \in V, d_{ij} = c_{ij} \text{ se }
-          (i, j) \in A \text{ ou } d_{ij} = \lim_{x \to +\infty}x \text{
+    \Function{FloydWarshall}{G}
+      \State{$D \gets \{d_{ij}\, |\, i, j \in V, d_{ij} := c_{ij} \text{ se }
+          (i, j) \in A \text{ ou } d_{ij} := \lim_{x \to +\infty}x \text{
       caso contrário }   \}$}
-      \State{$P \gets \{p_{ij}\, |\, (i, j) \in A, p_{ij} = i \}$}
+      \State{$P \gets \{p_{ij}\, |\, (i, j) \in A, p_{ij} := i \}$}
       \For{$k \in V$}
         \For{$i \in V$}
           \For{$j \in V$}
             \If{$d_{ik} + d_{kj} < d_{ij}$}
-              \State{$d_{ij} = d_{ik} + d_{kj}$}
-              \State{$p_{ij} = p_{kj}$}
+              \State{$d_{ij} \gets d_{ik} + d_{kj}$}
+              \State{$p_{ij} \gets p_{kj}$}
             \EndIf
           \EndFor
         \EndFor
@@ -121,5 +121,44 @@ predecessores com os valores conhecidos entre os vértices adjacentes.
 Após isso, o algoritmo, tenta inserir todo vértice $k$ no caminho
 entre outros vértices $i$ e $j$ se for vantajoso, atualizando $D$ e
 $P$ no processo.
+
+\subsubsection{Árvore de caminhos mais curtos}
+
+A partir do retorno do algoritmo de Floyd-Warshall, é possível
+construir uma árvore tal que o caminho entre a raiz e qualquer
+vértice, é exatamente o menor caminho entre os dois.
+
+O algoritmo é recursivo, e a ideia geral é: para cada vértice final
+de um caminho viável a partir de uma raiz, construir nó filho
+recursivamente se o vértice predecessor do caminho entre a raiz
+inicial (no caso base da recursão) e o vértice final for igual a raiz
+atual (raiz corrente na recursão). O algoritmo pode ser descrito em
+pseudocódigo da seguinte forma:
+
+% tex-fmt: off
+\begin{algorithm}
+  \caption{Algoritmo de construção da árvore de caminhos mais curtos}
+  \begin{algorithmic}[0]
+    \Require{$G := (V, A, c)$, $r$ e $\mathcal{F}_\mathcal{W} := (D, P)$. Onde $\mathcal{F}_\mathcal{W}$ é o resultado
+      da aplicação de Floyd-Warshall em $G$ e $r$, é a raiz escolhida previamente.}
+      \Ensure{Uma árvore $\mathcal{A} := (n, \mathcal{F})$. Onde $n \in V$ e $\mathcal{F}$ é uma lista de árvores como $\mathcal{A}$.}
+    \State
+    \Function{ConstruirÁrvore}{$G, \mathcal{F}_\mathcal{W}, r, \mathcal{A} := (r, \mathcal{F} := \{\}), \Sigma := \{r\}$}
+      \For{$j \in \{j\, |\, d_{ij} \in D, d_{ij} \neq \lim_{x \to +\infty}x\}$}
+        \If{$j \neq n \land p_{rj} = n$}
+          \If{$j \notin \Sigma$}
+            \State{$\Sigma \gets \Sigma \cup \{j\}$}
+            \State{$\mathcal{F} \gets \mathcal{F} \cup \{\mathsf{ConstruirÁrvore}(G, \mathcal{F}_\mathcal{W}, r, (j, \{\}), \Sigma)\}$}
+          \EndIf
+        \EndIf
+      \EndFor
+      \State \Return $\mathcal{A}$
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+% tex-fmt: on
+
+Naturalmente, para recuperar o caminho mais curto entre $r$ e qualquer outro,
+bastar percorrer a árvore.
 
 \section{Algoritmos em Grafos Eulerianos}
