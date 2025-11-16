@@ -27,7 +27,7 @@ where
         self.0
             .get(&node)
             .map(|neighbors| neighbors.iter().map(|&(n, _)| n).collect::<Vec<_>>())
-            .unwrap_or_else(Vec::new)
+            .unwrap_or_default()
             .into_iter()
     }
 
@@ -62,23 +62,20 @@ where
     stack.push(start_node);
 
     while let Some(current_vertex) = stack.last().copied() {
-        if let Some(neighbors) = edge_count.get_mut(&current_vertex) {
-            if let Some((&next_vertex, count)) = neighbors.iter_mut().find(|(_, count)| **count > 0)
+        if let Some(neighbors) = edge_count.get_mut(&current_vertex)
+            && let Some((&next_vertex, count)) = neighbors.iter_mut().find(|(_, count)| **count > 0)
             {
                 *count -= 1;
 
-                if !is_directed {
-                    if let Some(rev_neighbors) = edge_count.get_mut(&next_vertex) {
-                        if let Some(rev_count) = rev_neighbors.get_mut(&current_vertex) {
+                if !is_directed
+                    && let Some(rev_neighbors) = edge_count.get_mut(&next_vertex)
+                        && let Some(rev_count) = rev_neighbors.get_mut(&current_vertex) {
                             *rev_count -= 1;
                         }
-                    }
-                }
 
                 stack.push(next_vertex);
                 continue;
             }
-        }
 
         if let Some(vertex) = stack.pop() {
             path.push(vertex);
@@ -247,6 +244,12 @@ pub struct UndirectedEulerianGraph<N: Node> {
     edges: HashMap<N, Vec<N>>,
 }
 
+impl<N: Node> Default for UndirectedEulerianGraph<N> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<N: Node> UndirectedEulerianGraph<N> {
     pub fn new() -> Self {
         Self {
@@ -272,8 +275,8 @@ impl<N: Node> Graph<N> for UndirectedEulerianGraph<N> {
     fn neighbors(&self, node: N) -> impl Iterator<Item = N> {
         self.edges
             .get(&node)
-            .map(|neighbors| neighbors.iter().copied().collect::<Vec<_>>())
-            .unwrap_or_else(Vec::new)
+            .map(|neighbors| neighbors.to_vec())
+            .unwrap_or_default()
             .into_iter()
     }
 
