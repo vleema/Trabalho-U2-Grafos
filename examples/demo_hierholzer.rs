@@ -1,4 +1,4 @@
-use graphs_algorithms::eulerian_graph::{hierholzer, UndirectedGraph};
+use graphs_algorithms::eulerian_graph::{hierholzer, UndirectedEulerianGraph};
 use graphs_algorithms::Graph;
 use graphs_algorithms::graphs::AdjacencyList;
 
@@ -40,7 +40,7 @@ fn demo_eulerian_cycle() {
     println!("- Caminho encontrado: {:?}", result.path);
 
     if result.has_eulerian_cycle {
-        println!("\n✅ O grafo possui um CICLO EULERIANO!");
+        println!("\nO grafo possui um CICLO EULERIANO!");
         println!("Começa e termina no mesmo vértice: {} → ... → {}",
                  result.path[0], result.path[result.path.len()-1]);
 
@@ -55,12 +55,11 @@ fn demo_eulerian_cycle() {
     }
 }
 
-
 fn demo_eulerian_path() {
-    println!("GRAFO 2: Caminho Euleriano (Direcionado)");
+    println!("GRAFO 2: Caminho Euleriano (Não Direcionado)");
     println!("Vértices: 1, 2, 3, 4, 5, 6, 7");
 
-    let mut graph = UndirectedGraph::new();
+    let mut graph = UndirectedEulerianGraph::new();
 
     graph.add_node('1');
     graph.add_node('2');
@@ -92,13 +91,20 @@ fn demo_eulerian_path() {
 
     if result.has_eulerian_cycle {
         println!("\nO grafo possui um CICLO EULERIANO!");
-    } else if result.has_eulerian_path {
-        println!("\nO grafo possui um CAMINHO EULERIANO!");
+        println!("Todos os vértices têm grau par");
         if !result.path.is_empty() {
-            println!("Começa em {} e termina em {}",
+            println!("Começa e termina no mesmo vértice: {} → ... → {}",
                      result.path[0], result.path[result.path.len()-1]);
         }
-    } else {
-        println!("\n❌ O grafo NÃO é euleriano");
+
+        let expected_length = 12 + 1;
+        if result.path.len() == expected_length {
+            println!("Percorre todas as {} arestas exatamente uma vez", 12);
+        }
+    }
+
+    if result.has_eulerian_path {
+        println!("O grafo também possui CAMINHO EULERIANO!");
+        println!("(Um ciclo euleriano é um caso especial de caminho euleriano)");
     }
 }

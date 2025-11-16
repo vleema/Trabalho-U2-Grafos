@@ -226,13 +226,7 @@ fn check_undirected_eulerian<N: Node>(
 
     for &node in nodes {
         let degree = out_degree.get(&node).copied().unwrap_or(0);
-
-        // Ignorar nós isolados
-        if degree == 0 {
-            continue;
-        }
-
-        if degree % 2 != 0 {
+        if degree > 0 && degree % 2 != 0 {
             odd_degree_nodes.push(node);
         }
     }
@@ -243,7 +237,7 @@ fn check_undirected_eulerian<N: Node>(
                 .find(|&&n| out_degree.get(&n).copied().unwrap_or(0) > 0)
                 .copied()
                 .unwrap_or(nodes[0]);
-            (start, false, true)
+            (start, true, true)
         }
         2 => {
             (odd_degree_nodes[0], true, false)
@@ -254,11 +248,11 @@ fn check_undirected_eulerian<N: Node>(
     }
 }
 
-pub struct UndirectedGraph<N: Node> {
+pub struct UndirectedEulerianGraph<N: Node> {
     edges: HashMap<N, Vec<N>>,
 }
 
-impl<N: Node> UndirectedGraph<N> {
+impl<N: Node> UndirectedEulerianGraph<N> {
     pub fn new() -> Self {
         Self { edges: HashMap::new() }
     }
@@ -273,7 +267,7 @@ impl<N: Node> UndirectedGraph<N> {
     }
 }
 
-impl<N: Node> Graph<N> for UndirectedGraph<N> {
+impl<N: Node> Graph<N> for UndirectedEulerianGraph<N> {
     fn nodes(&self) -> impl Iterator<Item = N> {
         self.edges.keys().copied().collect::<Vec<_>>().into_iter()
     }
@@ -343,7 +337,7 @@ mod tests {
 
     #[test]
     fn test_eulerian_cycle_undirected() {
-        let mut graph = UndirectedGraph::new();
+        let mut graph = UndirectedEulerianGraph::new();
 
         graph.add_node('A');
         graph.add_node('B');
@@ -353,14 +347,18 @@ mod tests {
         graph.add_edge('C', 'A');
 
         let result = hierholzer(&graph);
+
         assert!(result.has_eulerian_cycle, "Should have Eulerian cycle");
-        assert!(!result.has_eulerian_path, "Should not have Eulerian path");
+        assert!(result.has_eulerian_path, "Should also have Eulerian path (cycle is a special case)");
         assert!(!result.path.is_empty(), "Path should not be empty");
+
+        assert_eq!(result.path[0], result.path[result.path.len()-1],
+                   "Cycle should start and end at same vertex");
     }
 
     #[test]
     fn test_eulerian_path_undirected() {
-        let mut graph = UndirectedGraph::new();
+        let mut graph = UndirectedEulerianGraph::new();
 
         graph.add_node('A');
         graph.add_node('B');
@@ -372,6 +370,9 @@ mod tests {
         assert!(!result.has_eulerian_cycle, "Should not have Eulerian cycle");
         assert!(result.has_eulerian_path, "Should have Eulerian path");
         assert!(!result.path.is_empty(), "Path should not be empty");
+
+        assert_ne!(result.path[0], result.path[result.path.len()-1],
+                   "Path should start and end at different vertices");
     }
 
     #[test]
@@ -381,6 +382,7 @@ mod tests {
 
         let result = hierholzer(&graph);
         assert!(result.has_eulerian_cycle, "Single node should have trivial Eulerian cycle");
+        assert!(result.has_eulerian_path, "Single node should also have trivial Eulerian path");
         assert_eq!(result.path, vec!['A']);
     }
 }

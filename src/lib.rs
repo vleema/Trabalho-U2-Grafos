@@ -27,4 +27,4 @@ pub mod graphs {
     pub use crate::traversal::Edge;
 }
 
-pub use eulerian_graph::hierholzer;
+pub use eulerian_graph::{hierholzer, UndirectedEulerianGraph};
