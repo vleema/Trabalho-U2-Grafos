@@ -132,13 +132,11 @@ impl<N: Node, W: Weight> BellmanFordResult<N, W> {
     ///     * Para todo nó, verifique:
     ///         * Para toda aresta (u,v) que "sai" desse nó:
     ///             * Verifique a desigualdade triangular do custo das distâncias
-    ///             * Caso sejá mais vantajoso, atualize a distância e a precedência daquele
-    ///             vértice
+    ///             * Caso sejá mais vantajoso, atualize a distância e a precedência daquele vértice
     /// * Loop secundário: para toda aresta, verifique:
     ///     * Se (u,v) é a melhor alternativa para chegar no vizinho
     ///     * Caso não, há um ciclo negativo
-    /// * Retorna um [`BellmanFordResult`] com as variáveis locais `dist`, `pred` e
-    /// `has_negative_cycle`.
+    /// * Retorna um [`BellmanFordResult`] com as variáveis locais `dist`, `pred` e `has_negative_cycle`.
     pub fn new(g: &(impl WeightedGraph<N, W> + ?Sized), start: N) -> Self {
         let mut dist = HashMap::new();
         let mut pred = HashMap::new();
