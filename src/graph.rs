@@ -46,9 +46,9 @@ pub trait Graph<N: Node> {
     /// # Retorno
     /// Uma tupla `(usize, usize)` onde:
     /// - O primeiro elemento é o grau interno (quantas arestas
-    /// entram no vértice);
+    ///   entram no vértice);
     /// - O segundo elemento é o grau externo (quantas arestas
-    /// saem do vértice).
+    ///   saem do vértice).
     fn node_degrees(&self, n: N) -> (usize, usize);
 
     /// Retorna um iterador para todos os nós do grafo.
@@ -219,7 +219,7 @@ pub trait WeightedGraph<N: Node, W: Weight>: Graph<N> {
     ///
     /// # Retorno
     /// - Uma struct `DijkstraResult` com o campo `route` que guarda todos os dados
-    /// necessários para visualizar o caminho mais curto entre os vértices.
+    ///   necessários para visualizar o caminho mais curto entre os vértices.
     fn dijkstra(&self, start: N) -> DijkstraResult<N, W> {
         DijkstraResult::new(self, start)
     }
