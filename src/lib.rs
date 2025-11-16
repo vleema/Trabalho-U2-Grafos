@@ -3,7 +3,7 @@
 #![feature(impl_trait_in_assoc_type)]
 
 mod adjacency_list;
-mod eulerian_cycle;
+mod eulerian_path;
 mod graph;
 mod minimum_spanning_tree;
 mod shortest_path;

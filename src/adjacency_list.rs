@@ -151,6 +151,9 @@ impl<N: Node, W: Weight> Graph<N> for AdjacencyList<N, W> {
         matrix
         */
     }
+    fn is_directed(&self) -> bool {
+        true
+    }
 }
 
 impl<N: Node, W: Weight> UndirectedGraph<N> for AdjacencyList<N, W> {

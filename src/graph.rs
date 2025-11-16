@@ -85,12 +85,12 @@ pub trait Graph<N: Node> {
     ///
     /// This removes edge directionality, making each edge bidirectional.
     fn underlying_graph(&self) -> Self;
-
-    /// Returns `true` if there is a directed edge from node `n` to node `m`.
     fn has_edge(&self, n: N, m: N) -> bool {
         self.neighbors(n).any(|neighbor| neighbor == m)
     }
 
+    fn is_directed(&self) -> bool;    
+    
     /// Returns an iterator that performs a **depth-first search (DFS)** starting from `start`.
     ///
     /// The iterator yields [`DfsEvent`] values that represent the traversal steps.
