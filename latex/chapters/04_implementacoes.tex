@@ -117,4 +117,218 @@ Isso traz solidez e isolamento para o algoritmo, que é capaz de
 cumprir com eficácia seu objetivo principal sem se preocupar com o
 modo em que as informações serão usadas.
 
+\subsection{Algoritmo de Floyd-Warshall}
+
+Para o algoritmo de
+Floyd-Warshall~(\ref{sec:pseudocode_floyd-warshall}), inicialmente definimos uma
+estrutura, que vai representar o retorno da função:
+
+\begin{listing}[H]
+  \caption{Estrutura de resultado do Algoritmo Floyd-Warshall}
+\begin{minted}{rust}
+struct FloydWarshallResult<Node, Weight> {
+    dist: HashMap<Node, HashMap<Node, Weight>>,
+    pred: HashMap<Node, HashMap<Node, Node>>,
+}
+\end{minted}
+\end{listing}
+
+Ela é genérica a qualquer tipo de nó e de peso, identificados por
+\texttt{Node} e \texttt{Weight}. \texttt{dist} representa a matriz de
+distâncias do resultado do algoritmo e \texttt{pred} representa a
+matriz de predecessores. Para o resultado ser genérico a qualquer
+tipo, é necessário implementar a matriz através de tabelas hash que
+indexam nós e armazenam outras tabelas hash, as quais indexam nó e
+custo (no caso da matriz de distâncias). De forma que um acesso
+\texttt{dist[i][j]} represente a
+distância entre o vértice \texttt{i} e o vértice \texttt{j}.
+
+Após definir a estrutura, definimos a interface do algoritmo como sendo o
+construtor dessa estrutura, nomeado de \texttt{new}:
+\begin{listing}[H]
+  \caption{Interface do algoritmo de Floyd-Warshall}
+\begin{minted}{rust}
+impl<N: Node, W: Weight> FloydWarshallResult<N, W> {
+    fn new(g: &(impl WeightedGraph<N, W> + ?Sized)) -> Self;
+}
+\end{minted}
+\end{listing}
+
+O algoritmo espera a implementação de um grafo ponderado \texttt{g}
+que pode ter seu tamanho conhecido ou não em tempo de compilação (com
+a restrição de traço \texttt{?Sized}). \texttt{N} e \texttt{W} são o
+tipo do nó e do custo, e são restritos pelos traços
+\texttt{Node} e \texttt{Weight} respectivamente.
+
+Começando a implementação, definimos as duas estruturas que vão
+constituir o resultado e as inicializamos:
+
+\begin{minted}{rust}
+let mut dist = HashMap::with_capacity(g.order());
+let mut pred = HashMap::with_capacity(g.order());
+for n in g.nodes() {
+    let mut neighbors_dist = HashMap::new();
+    let mut neighors_pred = HashMap::new();
+
+    neighbors_dist.insert(n, W::zero());
+    neighors_pred.insert(n, n);
+
+    for (neighbor, weight) in g.weighted_neighbors(n) {
+        neighbors_dist.insert(neighbor, weight);
+        neighors_pred.insert(neighbor, n);
+    }
+
+    dist.insert(n, neighbors_dist);
+    pred.insert(n, neighors_pred);
+}
+\end{minted}
+
+Essa inicialização garante que os custos e predecessores dos vértices
+adjacentes já sejam incorporados na estrutura. Entretanto, note que
+as outras distâncias e predecessores não são inicializados, diferente
+de como é descrito no
+pseudocódigo~\ref{sec:pseudocode_floyd-warshall}. Note também que
+explicitamente definimos \texttt{pred[i][i]} como \texttt{i} e
+\texttt{dist[i][i]} como \texttt{0} nessa implementação. Fizemos isso
+para manter a fidelidade a implementações mais clássicas do
+algoritmo, mas não é obrigatório.
+
+Antes de partir para o cerne da implementação, definimos uma função
+anônima denominada \texttt{unwrap\_dist}, para lidar com o acesso
+seguro as tabelas hash de rust, especificamente a \texttt{dist}. Pois
+o acesso usando operador \texttt{[]} pode causar pânicos se a chave
+não existir, o que no nosso caso não é garantido para o segundo acesso.
+
+\begin{minted}{rust}
+let unwrap_dist = |dist: &HashMap<N, HashMap<N, W>>, i, j| {
+    dist[&i].get(&j).copied().unwrap_or(W::max_value())
+};
+\end{minted}
+
+No caso em que a segunda chave não exista, retornamos o valor máximo do tipo
+numérico do custo (\texttt{W::max\_value()}) ao invés do valor que
+existiria no acesso.
+
+Por fim, partimos para o cerne da implementação, o loop principal do algoritmo:
+
+\begin{minted}{rust}
+for k in g.nodes() {
+    for i in g.nodes() {
+        for j in g.nodes() {
+            let dist_ik = unwrap_dist(&dist, i, k);
+            let dist_kj = unwrap_dist(&dist, k, j);
+            let dist_ij = unwrap_dist(&dist, i, j);
+            if let Some(sum) = dist_ik.checked_add(&dist_kj)
+                && sum < dist_ij
+            {
+                dist.entry(i).and_modify(|ds| {
+                    ds.entry(j)
+                        .and_modify(|d| *d = sum)
+                        .or_insert(sum);
+                });
+                let pred_kj = pred[&k][&j];
+                pred.entry(i).and_modify(|ps| {
+                    ps.entry(j)
+                        .and_modify(|p| *p = pred_kj)
+                        .or_insert(pred_kj);
+                });
+            }
+        }
+    }
+}
+
+Self { dist, pred }
+\end{minted}
+
+A implementação segue o algoritmo clássico em semântica, entretanto,
+com diversas checagens de segurança. Por exemplo, ao checar se
+\texttt{k} melhora a distância entre \texttt{i} e \texttt{j}, é
+primeiro verificado se a soma entre \texttt{dist[i][k]} e
+\texttt{dist[k][j]} causa overflow de inteiro, usando o método
+\texttt{checked\_add} de um tipo numérico:
+
+\begin{minted}{rust}
+if let Some(sum) = dist_ik.checked_add(&dist_kj)
+    && sum < dist_ij { ... }
+\end{minted}
+
+Além disso, ao invés de alterar diretamente o predecessor e distância de
+$ij$ quando é necessário, alteramos ou inserimos o novo valor, visto
+que não é garantido que \texttt{pred[i][j]} ou \texttt{dist[i][j]}
+existiam previamente.
+
+\begin{minted}{rust}
+dist.entry(i).and_modify(|ds| {
+    ds.entry(j)
+        .and_modify(|d| *d = sum)
+        .or_insert(sum);
+});
+let pred_kj = pred[&k][&j];
+pred.entry(i).and_modify(|ps| {
+    ps.entry(j)
+        .and_modify(|p| *p = pred_kj)
+        .or_insert(pred_kj);
+});
+\end{minted}
+
+A implementação completa do algoritmo é a seguinte:
+
+\begin{listing}[H]
+  \caption{Implementação do algoritmo de Floyd-Warshall}
+  \begin{minted}{rust}
+impl<N: Node, W: Weight> FloydWarshallResult<N, W> {
+    pub fn new(g: &(impl WeightedGraph<N, W> + ?Sized)) -> Self {
+        let mut dist = HashMap::with_capacity(g.order());
+        let mut pred = HashMap::with_capacity(g.order());
+        for n in g.nodes() {
+            let mut neighbors_dist = HashMap::new();
+            let mut neighors_pred = HashMap::new();
+
+            neighbors_dist.insert(n, W::zero());
+            neighors_pred.insert(n, n);
+
+            for (neighbor, weight) in g.weighted_neighbors(n) {
+                neighbors_dist.insert(neighbor, weight);
+                neighors_pred.insert(neighbor, n);
+            }
+
+            dist.insert(n, neighbors_dist);
+            pred.insert(n, neighors_pred);
+        }
+
+        let unwrap_dist = |dist: &HashMap<N, HashMap<N, W>>, i, j| {
+            dist[&i].get(&j).copied().unwrap_or(W::max_value())
+        };
+
+        for k in g.nodes() {
+            for i in g.nodes() {
+                for j in g.nodes() {
+                    let dist_ik = unwrap_dist(&dist, i, k);
+                    let dist_kj = unwrap_dist(&dist, k, j);
+                    let dist_ij = unwrap_dist(&dist, i, j);
+                    if let Some(sum) = dist_ik.checked_add(&dist_kj)
+                        && sum < dist_ij
+                    {
+                        dist.entry(i).and_modify(|ds| {
+                            ds.entry(j)
+                                .and_modify(|d| *d = sum)
+                                .or_insert(sum);
+                        });
+                        let pred_kj = pred[&k][&j];
+                        pred.entry(i).and_modify(|ps| {
+                            ps.entry(j)
+                                .and_modify(|p| *p = pred_kj)
+                                .or_insert(pred_kj);
+                        });
+                    }
+                }
+            }
+        }
+
+        Self { dist, pred }
+    }
+}
+  \end{minted}
+\end{listing}
+
 \section{Algoritmos de Grafos Eulerianos}
