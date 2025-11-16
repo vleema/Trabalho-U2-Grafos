@@ -3,14 +3,14 @@ use crate::graph::Weight;
 use crate::graph::WeightedGraph;
 use std::collections::{HashMap, HashSet};
 
-/// Struct que guarda o Caminho Mais Curto de um vértice raiz a todos os outros, 
+/// Struct que guarda o Caminho Mais Curto de um vértice raiz a todos os outros,
 /// descoberto através do Algoritmo de Dijkstra.
-/// 
+///
 /// [`DijkstraResult`] guarda no campo `route` um dicionário,
 /// onde as chaves são todos os vértices do grafo e os valores uma dupla,
 /// onde o 1º elemento guarda a distância até o vértice e o 2º guarda o predecessor dele.
-/// 
-/// Para montar o caminho mais curto de A até B, é possível iniciar uma busca no dicionário 
+///
+/// Para montar o caminho mais curto de A até B, é possível iniciar uma busca no dicionário
 /// por B e adentrar em seus predecessores até A.
 pub struct DijkstraResult<Node, Weight> {
     pub route: HashMap<Node, (Weight, Option<Node>)>,
@@ -20,12 +20,12 @@ pub struct DijkstraResult<Node, Weight> {
 ///
 impl<N: Node, W: Weight> DijkstraResult<N, W> {
     /// Método que executa o Algoritmo de Dijkstra e retorna um [`DijkstraResult`]
-    /// 
+    ///
     /// ## Argumentos
     /// * `graph`: um tipo que implementa o traço [`WeightedGraph`], como [`AdjacencyList`]
     /// * `start`: o nó inicial, deve implementar o tipo [`N`]
-    /// 
-    /// ## Fluxo 
+    ///
+    /// ## Fluxo
     /// * Inicia marcando a distância do vértice `start` como 0 e seu predecessor como `None`;
     /// * Explora os vizinhos do vértice `start` e determina sua distância e predecessor
     /// * Loop principal: enquanto existir vértice não visitado no grafo
@@ -33,12 +33,12 @@ impl<N: Node, W: Weight> DijkstraResult<N, W> {
     ///     * Explora seus vizinhos não visitados e atualiza suas distâncias e predecessores, caso seja vantajoso
     ///     * Salva o vértice visitado na rota final
     /// * Retorna um [`DijkstraResult`] onde o campo `route` contém todas as informações necessárias para elaborar
-    /// o caminho mais curto entre quaisquer vértices.
-    /// 
+    ///   o caminho mais curto entre quaisquer vértices.
+    ///
     /// ## Observações
     /// * São utilizados os conjuntos e dicionários auxiliares `visited`, `distance` e `pred`,
-    /// que representam os vértices visitados, a distância até vértice `x` e o predecessor do vértice `x`.
-    /// 
+    ///   que representam os vértices visitados, a distância até vértice `x` e o predecessor do vértice `x`.
+    ///
     pub fn new(graph: &(impl WeightedGraph<N, W> + ?Sized), start: N) -> Self {
         let mut route: HashMap<N, (W, Option<N>)> = HashMap::new();
         let mut visited: HashSet<N> = HashSet::new();
@@ -217,7 +217,7 @@ mod test {
         map.insert('F', vec6);
 
         let g: AdjacencyList<char, i32> = AdjacencyList(map);
-        let DijkstraResult { route }= g.dijkstra('A');
+        let DijkstraResult { route } = g.dijkstra('A');
 
         assert_eq!(route.len(), 6);
         assert_eq!(route.get(&'A').unwrap().0, 0);
