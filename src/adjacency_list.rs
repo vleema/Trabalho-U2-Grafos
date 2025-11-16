@@ -3,11 +3,12 @@ use crate::{Graph, UndirectedGraph};
 use std::collections::HashMap;
 
 /// Representa um grafo usando uma lista de adjacência.
-/// A lista é implementada como um *map*, onde cada chave
+/// A lista é implementada como um dicionário, onde cada chave
 /// guarda um nó e o valor é um conjunto de arestas.
 /// Cada elemento do conjunto de arestas é uma dupla:
-/// o 1º elemento indica o vértice adjacente e o
-/// 2º elemento o peso da aresta.
+/// - 1º elemento indica o vértice adjacente;
+/// - 2º elemento indica o peso da aresta.
+///
 #[derive(Debug, Clone, Default)]
 pub struct AdjacencyList<N: Node, W: Weight>(pub HashMap<N, Vec<(N, W)>>);
 
