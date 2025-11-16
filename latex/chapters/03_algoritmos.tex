@@ -1,52 +1,125 @@
 \chapter{Descrição em Pseudocódigo dos Algoritmos da API}
 \label{ch:pseudocode}
 
-Neste capítulo, apresentaremos a descrição dos algoritmos, na forma de pseudocódigos, que constam na especificação da API. Este capítulo tem por objetivo preparar o leitor para ler e compreender com clareza a implementação feita em Rust, trazendo descrições e explicações que elucidem o funcionamento de cada algoritmo.
+Neste capítulo, apresentaremos a descrição dos algoritmos, na forma
+de pseudocódigos, que constam na especificação da API. Este capítulo
+tem por objetivo preparar o leitor para ler e compreender com clareza
+a implementação feita em Rust, trazendo descrições e explicações que
+elucidem o funcionamento de cada algoritmo.
 
 \section{Algoritmos de Árvore Geradora Mínima}
 \section{Algoritmos de Caminho Mais Curto}
 
 \subsection{Algoritmo de Dijkstra}
-O Algoritmo de \cite{dijkstraarticle}, proposto pelo cientista da computação Edsger Dijkstra, é um algoritmo extremamente útil para encontrar o caminho mais curto dentro de um grafo ponderado orientado ou não orientado sem arestas negativas. 
+\label{sec:pseudocode_dijkstra}
+O algoritmo \cite{dijkstraarticle}, proposto pelo cientista da
+computação Edsger Dijkstra, é um algoritmo extremamente útil para
+encontrar o caminho mais curto dentro de um grafo ponderado orientado
+ou não orientado sem arestas negativas.
 
+% tex-fmt: off
 \begin{algorithm}
-	\caption{Algoritmo de Dijkstra}
-	\begin{algorithmic}[0]
-		\Require{$ \mathbf{G(V, A, W)}$, $v \in \mathbf{V}$}
-		\Ensure{Sequência de $v \in \mathbf{V}$ ordenados que formam o caminho mais curto}
-		\Statex
-		\Function{Dijkstra}{G (V, A, W), s}
-		\State{$predecessor \gets []$}
-		\State{$predecessor[s] \gets$ nulo}
-		\State{$visitado \gets []$}
-		\State{$visitado[s] \gets 1$}
-		\State{$distancia \gets []$}
-		\State{$distancia[s] \gets 0$}
-		\For{$v \in V$}
-		\If{$v \in G.vizinhos()$}
-			\State{$predecessor[v] \gets s$}
-			\State{$distancia[v] \gets w(sv)$}
-		\Else
-			\State{$predecessor[v] \gets$ nulo}
-			\State{$distancia[v] \gets \inf$}
-		\EndIf
-		\EndFor
-		\While{$u \in V \land u \not \in visitado$} 
-		\State{$v \gets \min V$}
-		\State{$visitado[v] \gets 1$}
-		\For{$n \in v.vizinhos()$}
-		\If{$n \not \in visitado \land distancia[n] > distancia[v] + w(vn)$}
-			\State{$distancia[n] \gets distancia[v] + w(vn)$}
-			\State{$predecessor[n] \gets v$}
-		\EndIf
-		\EndFor
-		\EndWhile
-		\State \Return{$(visitado, distancia)$}
-		\EndFunction
-	\end{algorithmic}
+  \caption{Algoritmo de Dijkstra}
+  \begin{algorithmic}[0]
+    \Require{$G = (V, A, c)$, $v \in V$}
+    \Ensure{Sequência de $v \in V$ ordenados que formam o caminho mais curto}
+    \Statex
+    \Function{Dijkstra}{G = (V, A, c), s}
+      \State{$\mathsf{predecessor} \gets []$}
+      \State{$\mathsf{predecessor[s]} \gets \emptyset$}
+      \State{$\mathsf{visitado} \gets []$}
+      \State{$\mathsf{visitado[s]} \gets 1$}
+      \State{$\mathsf{distancia} \gets []$}
+      \State{$\mathsf{distancia[s]} \gets 0$}
+      \For{$v \in V$}
+        \If{$v \in \mathsf{vizinhos(v, G)}$}
+          \State{$\mathsf{predecessor[v]} \gets s$}
+          \State{$\mathsf{distancia[v]} \gets c_{sv}$}
+        \Else
+          \State{$\mathsf{predecessor[v]} \gets \emptyset$}
+          \State{$\mathsf{distancia[v]} \gets \lim_{x \to +\infty}x$}
+        \EndIf
+      \EndFor
+      \While{$u \in V \land \lnot \mathsf{visitado[u]}$}
+        \State{$v \gets \min V$}
+        \State{$\mathsf{visitado[v]} \gets 1$}
+      \For{$n \in \mathsf{vizinhos(v, G)}$}
+        \If{$n \not \in \mathsf{visitado} \land \mathsf{distancia[n]} > \mathsf{distancia[v]} + c_{vn}$}
+          \State{$\mathsf{distancia[n]} \gets \mathsf{distancia[v]} + c_{vn}$}
+          \State{$\mathsf{predecessor[n]} \gets v$}
+          \EndIf
+        \EndFor
+      \EndWhile
+      \State \Return{$(\mathsf{visitado, distancia})$}
+    \EndFunction
+  \end{algorithmic}
 \end{algorithm}
+\FloatBarrier
+% tex-fmt: on
 
-O algoritmo acima escolhe o vértice para operar com base no que tem a menor distância alcançável. No início, ele visita o primeiro vértice e determina a distância para os vizinhos como sendo o peso de suas arestas; para os que não são alcançáveis, a distância é infinita. Então, enquanto existirem vértices não visitados, o algortimo seleciona o que tem a menor distância, o visita e então relaxa os seus vizinhos: o relaxamento consiste em mudar o caminho no qual o vizinho é visitado, caso isso melhore a distância até o vizinho. Isso é feito verificando se a distância do vizinho é pior do que a distância até o vértice atual + o peso da aresta que liga os dois. \\
-Após o relaxamento, tudo se repete até que todos os vértices estejam visitados. Então, ao final das iterações, teremos a menor rota de um ponto de origem até todos os demais vértices.
+O algoritmo acima escolhe o vértice para operar com base no que tem a
+menor distância alcançável. No início, ele visita o primeiro vértice
+e determina a distância para os vizinhos como sendo o peso de suas
+arestas; para os que não são alcançáveis, a distância é infinita.
+Então, enquanto existirem vértices não visitados, o algortimo
+seleciona o que tem a menor distância, o visita e então relaxa os
+seus vizinhos: o relaxamento consiste em mudar o caminho no qual o
+vizinho é visitado, caso isso melhore a distância até o vizinho. Isso
+é feito verificando se a distância do vizinho é pior do que a
+distância até o vértice atual + o peso da aresta que liga os dois. \\
+Após o relaxamento, tudo se repete até que todos os vértices estejam
+visitados. Então, ao final das iterações, teremos a menor rota de um
+ponto de origem até todos os demais vértices.
+
+\subsection{Algoritmo de Floyd-Warshall}
+
+O Algoritmo de Robert Floyd e Stephen Warshall, comumente chamado de
+Floyd-Warshall \cite{floydwarshallWikipedia} visa encontrar todos os
+caminhos mais curtos entre todos os vértices de um grafo ponderado. O
+algoritmo não detecta ciclos negativos, mas não é impedido por sua
+existência, diferentemente de \ref{sec:pseudocode_dijkstra}.
+
+A ideia geral do algoritmo é, para todos os vértices, adicionar um
+vértice intermediário no caminho entre outros dois se a distância
+final entre as extremidades for menor. Em termos de pseudocódigo, o
+algoritmo é descrito da seguinte forma:
+
+% tex-fmt: off
+\begin{algorithm}
+  \caption{Algoritmo de Floyd-Warshall}
+  \begin{algorithmic}[0]
+    \Require{$G = (V, A, c)$}
+    \Ensure{Um par $(D, P)$. Onde, para todo $i, j \in V$, $D = [d_{ij}]$
+      e $d_{ij}$ representa as distância entre o vértices $i$ e $j$.
+      $P = [p_{ij}]$ e $p_{ij}$ representa o vértice origem da última
+    aresta no caminho de $i$ até $j$.}
+    \Statex
+    \Function{Floyd-Warshall}{G = (V, A, c)}
+    \State{$D \gets \{d_{ij}\, |\, i, j \in V, d_{ij} = c_{ij} \text{ se }
+          (i, j) \in A \text{ ou } d_{ij} = \lim_{x \to +\infty}x \text{
+      caso contrário }   \}$}
+      \State{$P \gets \{p_{ij}\, |\, (i, j) \in A, p_{ij} = i \}$}
+      \For{$k \in V$}
+        \For{$i \in V$}
+          \For{$j \in V$}
+            \If{$d_{ik} + d_{kj} < d_{ij}$}
+              \State{$d_{ij} = d_{ik} + d_{kj}$}
+              \State{$p_{ij} = p_{kj}$}
+            \EndIf
+          \EndFor
+        \EndFor
+      \EndFor
+      \State \Return $(D, P)$
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+\FloatBarrier
+% tex-fmt: on
+
+O algoritmo primeiro começa inicializando a matriz de distâncias e
+predecessores com os valores conhecidos entre os vértices adjacentes.
+Após isso, o algoritmo, tenta inserir todo vértice $k$ no caminho
+entre outros vértices $i$ e $j$ se for vantajoso, atualizando $D$ e
+$P$ no processo.
 
 \section{Algoritmos em Grafos Eulerianos}
