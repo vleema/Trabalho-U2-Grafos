@@ -1,6 +1,6 @@
 use crate::graph::Node;
 use crate::graphs::AdjacencyList;
-use std::collections::{HashMap};
+use std::collections::HashMap;
 
 pub struct HierholzerResult<N: Node> {
     pub path: Vec<N>,
@@ -63,8 +63,7 @@ where
 
     while let Some(current_vertex) = stack.last().copied() {
         if let Some(neighbors) = edge_count.get_mut(&current_vertex) {
-            if let Some((&next_vertex, count)) = neighbors.iter_mut()
-                .find(|(_, count)| **count > 0)
+            if let Some((&next_vertex, count)) = neighbors.iter_mut().find(|(_, count)| **count > 0)
             {
                 *count -= 1;
 
@@ -102,9 +101,7 @@ where
     }
 }
 
-fn calculate_degrees<N: Node, G: Graph<N>>(
-    graph: &G
-) -> (HashMap<N, usize>, HashMap<N, usize>) {
+fn calculate_degrees<N: Node, G: Graph<N>>(graph: &G) -> (HashMap<N, usize>, HashMap<N, usize>) {
     let mut out_degree = HashMap::new();
     let mut in_degree = HashMap::new();
 
@@ -133,9 +130,7 @@ fn calculate_degrees<N: Node, G: Graph<N>>(
     (out_degree, in_degree)
 }
 
-fn create_edge_count<N: Node, G: Graph<N>>(
-    graph: &G
-) -> HashMap<N, HashMap<N, usize>> {
+fn create_edge_count<N: Node, G: Graph<N>>(graph: &G) -> HashMap<N, HashMap<N, usize>> {
     let mut edge_count = HashMap::new();
 
     for node in graph.nodes() {
@@ -205,13 +200,16 @@ fn check_directed_eulerian<N: Node>(
     }
 
     if balanced_nodes == total_nodes_with_edges {
-        let start = nodes.iter()
+        let start = nodes
+            .iter()
             .find(|&&n| out_degree.get(&n).copied().unwrap_or(0) > 0)
             .copied()
             .unwrap_or(nodes[0]);
         (start, true, true)
-    } else if start_candidate.is_some() && end_candidate.is_some()
-        && balanced_nodes == total_nodes_with_edges - 2 {
+    } else if start_candidate.is_some()
+        && end_candidate.is_some()
+        && balanced_nodes == total_nodes_with_edges - 2
+    {
         (start_candidate.unwrap(), true, false)
     } else {
         (nodes[0], false, false)
@@ -233,18 +231,15 @@ fn check_undirected_eulerian<N: Node>(
 
     match odd_degree_nodes.len() {
         0 => {
-            let start = nodes.iter()
+            let start = nodes
+                .iter()
                 .find(|&&n| out_degree.get(&n).copied().unwrap_or(0) > 0)
                 .copied()
                 .unwrap_or(nodes[0]);
             (start, true, true)
         }
-        2 => {
-            (odd_degree_nodes[0], true, false)
-        }
-        _ => {
-            (nodes[0], false, false)
-        }
+        2 => (odd_degree_nodes[0], true, false),
+        _ => (nodes[0], false, false),
     }
 }
 
@@ -254,7 +249,9 @@ pub struct UndirectedEulerianGraph<N: Node> {
 
 impl<N: Node> UndirectedEulerianGraph<N> {
     pub fn new() -> Self {
-        Self { edges: HashMap::new() }
+        Self {
+            edges: HashMap::new(),
+        }
     }
 
     pub fn add_edge(&mut self, u: N, v: N) {
@@ -302,15 +299,27 @@ mod tests {
         graph.add_edge('C', 'A');
 
         let result = hierholzer(&graph);
-        println!("Cycle result: path={:?}, has_cycle={}, has_path={}",
-                 result.path, result.has_eulerian_cycle, result.has_eulerian_path);
+        println!(
+            "Cycle result: path={:?}, has_cycle={}, has_path={}",
+            result.path, result.has_eulerian_cycle, result.has_eulerian_path
+        );
 
         assert!(result.has_eulerian_cycle, "Should have Eulerian cycle");
-        assert!(result.has_eulerian_path, "Should also have Eulerian path (cycle is a special case)");
+        assert!(
+            result.has_eulerian_path,
+            "Should also have Eulerian path (cycle is a special case)"
+        );
         assert!(!result.path.is_empty(), "Path should not be empty");
-        assert_eq!(result.path.len(), 4, "Path should have 4 vertices for 3 edges");
-        assert_eq!(result.path[0], result.path[result.path.len()-1],
-                   "Cycle should start and end at same vertex");
+        assert_eq!(
+            result.path.len(),
+            4,
+            "Path should have 4 vertices for 3 edges"
+        );
+        assert_eq!(
+            result.path[0],
+            result.path[result.path.len() - 1],
+            "Cycle should start and end at same vertex"
+        );
     }
 
     #[test]
@@ -326,13 +335,18 @@ mod tests {
         graph.add_edge('C', 'D');
 
         let result = hierholzer(&graph);
-        println!("Path only result: path={:?}, has_cycle={}, has_path={}",
-                 result.path, result.has_eulerian_cycle, result.has_eulerian_path);
+        println!(
+            "Path only result: path={:?}, has_cycle={}, has_path={}",
+            result.path, result.has_eulerian_cycle, result.has_eulerian_path
+        );
         assert!(!result.has_eulerian_cycle, "Should not have Eulerian cycle");
         assert!(result.has_eulerian_path, "Should have Eulerian path");
         assert!(!result.path.is_empty(), "Path should not be empty");
-        assert_ne!(result.path[0], result.path[result.path.len()-1],
-                   "Path should start and end at different vertices");
+        assert_ne!(
+            result.path[0],
+            result.path[result.path.len() - 1],
+            "Path should start and end at different vertices"
+        );
     }
 
     #[test]
@@ -349,11 +363,17 @@ mod tests {
         let result = hierholzer(&graph);
 
         assert!(result.has_eulerian_cycle, "Should have Eulerian cycle");
-        assert!(result.has_eulerian_path, "Should also have Eulerian path (cycle is a special case)");
+        assert!(
+            result.has_eulerian_path,
+            "Should also have Eulerian path (cycle is a special case)"
+        );
         assert!(!result.path.is_empty(), "Path should not be empty");
 
-        assert_eq!(result.path[0], result.path[result.path.len()-1],
-                   "Cycle should start and end at same vertex");
+        assert_eq!(
+            result.path[0],
+            result.path[result.path.len() - 1],
+            "Cycle should start and end at same vertex"
+        );
     }
 
     #[test]
@@ -371,8 +391,11 @@ mod tests {
         assert!(result.has_eulerian_path, "Should have Eulerian path");
         assert!(!result.path.is_empty(), "Path should not be empty");
 
-        assert_ne!(result.path[0], result.path[result.path.len()-1],
-                   "Path should start and end at different vertices");
+        assert_ne!(
+            result.path[0],
+            result.path[result.path.len() - 1],
+            "Path should start and end at different vertices"
+        );
     }
 
     #[test]
@@ -381,8 +404,14 @@ mod tests {
         graph.add_node('A');
 
         let result = hierholzer(&graph);
-        assert!(result.has_eulerian_cycle, "Single node should have trivial Eulerian cycle");
-        assert!(result.has_eulerian_path, "Single node should also have trivial Eulerian path");
+        assert!(
+            result.has_eulerian_cycle,
+            "Single node should have trivial Eulerian cycle"
+        );
+        assert!(
+            result.has_eulerian_path,
+            "Single node should also have trivial Eulerian path"
+        );
         assert_eq!(result.path, vec!['A']);
     }
 }

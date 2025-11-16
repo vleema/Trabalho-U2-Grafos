@@ -89,8 +89,8 @@ pub trait Graph<N: Node> {
         self.neighbors(n).any(|neighbor| neighbor == m)
     }
 
-    fn is_directed(&self) -> bool;    
-    
+    fn is_directed(&self) -> bool;
+
     /// Returns an iterator that performs a **depth-first search (DFS)** starting from `start`.
     ///
     /// The iterator yields [`DfsEvent`] values that represent the traversal steps.

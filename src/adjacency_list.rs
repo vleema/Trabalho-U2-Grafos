@@ -32,7 +32,9 @@ impl<N: Node, W: Weight> Graph<N> for AdjacencyList<N, W> {
     fn node_degrees(&self, n: N) -> (usize, usize) {
         let out_deg = self.0.get(&n).map_or(0, |neighbors| neighbors.len());
 
-        let in_deg = self.0.iter()
+        let in_deg = self
+            .0
+            .iter()
             .filter(|(_, neighbors)| neighbors.iter().any(|(target, _)| *target == n))
             .count();
 
@@ -230,8 +232,7 @@ impl<N: Node, W: Weight> WeightedGraph<N, W> for AdjacencyList<N, W> {
             .and_modify(|neighbors| neighbors.push((m, w)));
     }
 
-
-        type WeightedNeighbors<'a>
+    type WeightedNeighbors<'a>
         = impl Iterator<Item = (N, W)>
     where
         Self: 'a,

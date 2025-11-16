@@ -1,5 +1,5 @@
-use graphs_algorithms::eulerian_graph::{hierholzer, UndirectedEulerianGraph};
 use graphs_algorithms::Graph;
+use graphs_algorithms::eulerian_graph::{UndirectedEulerianGraph, hierholzer};
 use graphs_algorithms::graphs::AdjacencyList;
 
 fn main() {
@@ -41,8 +41,11 @@ fn demo_eulerian_cycle() {
 
     if result.has_eulerian_cycle {
         println!("\nO grafo possui um CICLO EULERIANO!");
-        println!("Começa e termina no mesmo vértice: {} → ... → {}",
-                 result.path[0], result.path[result.path.len()-1]);
+        println!(
+            "Começa e termina no mesmo vértice: {} → ... → {}",
+            result.path[0],
+            result.path[result.path.len() - 1]
+        );
 
         let expected_length = 9 + 1;
         if result.path.len() == expected_length {
@@ -93,8 +96,11 @@ fn demo_eulerian_path() {
         println!("\nO grafo possui um CICLO EULERIANO!");
         println!("Todos os vértices têm grau par");
         if !result.path.is_empty() {
-            println!("Começa e termina no mesmo vértice: {} → ... → {}",
-                     result.path[0], result.path[result.path.len()-1]);
+            println!(
+                "Começa e termina no mesmo vértice: {} → ... → {}",
+                result.path[0],
+                result.path[result.path.len() - 1]
+            );
         }
 
         let expected_length = 12 + 1;
