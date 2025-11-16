@@ -1,4 +1,18 @@
-//! A Rust crate for representing and manipulating graphs using various data structures.
+//! Estruturas de dados e algoritmos para Grafos.
+//!
+//! Crate que fornece algoritmos e estruturas de dados para Grafos.
+//!
+//! A organização do crate é feita em diversos módulos:
+//! - `adjacency_list`: guarda a representação de um grafo no formato da Lista de Adjacência,
+//! bastante popular e comum de implementar;
+//! - `eulerian_cycle`: armazena os algoritmos para detecção de ciclos e caminhos eulerianos em um
+//! grafo;
+//! - `minimum_spanning_tree`: armazena os algoritmos para a criação de árvores geradoras mínimas a
+//! partir de um grafo. Os algoritmos incluem Kruskal, Prim e Boruvka;
+//! - `shortest_path`: armazena os algoritmos para a detecção do caminho mais curto em um grafo. Os
+//! algoritmos incluem Dijkstra, Bellman-Ford e Floyd-Warshall;
+//! - `traversal`: armazena os algoritmos para a travessia em um grafo. Os algoritmos incluem a
+//! BFS, DFS, DFS com classificação de arestas e identificação de componentes.
 
 #![feature(impl_trait_in_assoc_type)]
 
