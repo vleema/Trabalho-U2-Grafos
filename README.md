@@ -8,9 +8,10 @@ Trabalho-U2-Grafos/
 ├── Cargo.lock
 ├── Cargo.toml
 ├── examples    # Programas de exemplo para testar implementações
-│   └── data/   # Arquivos .txt com grafos
-│   └── dot/    # Diagramas de grafos em .dot
-│   └── output/ # Imagens de grafos geradas através dos .dot
+│   ├── demo_bellmanford.rs # exemplo do funcionamento do algoritmo de Bellman-Ford
+│   ├── demo_dijkstra.rs    # mesma coisa para o Dijkstra...
+│   ├── demo_kruskal.rs
+│   └── demo_prim.rs
 ├── latex # Código fonte do documento latex
 │   ├── chapters/
 │   ├── CS_report.sty   # Definições e import de biblioteca
@@ -108,11 +109,3 @@ Existe uma imagem compilada em `vleema/latex-compiler` (não garantimos que este
 ```bash
 docker pull vleema/latex-compiler:latest
 ```
-
-## Exemplos
-
-No diretório `examples/` estão presentes diversos scripts que demonstram os usos da biblioteca principal. Estes são:
-
-- `demo_dijkstra`: arquivo que mostra o funcionamento da implementação do dijkstra.
-
-Para executá-los, veja a seção anterior.
