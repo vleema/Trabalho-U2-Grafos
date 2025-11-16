@@ -2,10 +2,10 @@ use std::collections::HashMap;
 
 use graphs_algorithms::WeightedGraph;
 use graphs_algorithms::graphs::AdjacencyList;
-use graphs_algorithms::graphs::DijkstraResult;
+use graphs_algorithms::graphs::BellmanFordResult;
 
 fn main() {
-    println!("Bem vindo à execução do algoritmo de Dijkstra!");
+    println!("Bem vindo à execução do algoritmo de Bellman-Ford!");
 
     let mut map: HashMap<usize, Vec<(usize, i32)>> = HashMap::new();
     map.insert(1, vec![(11, 1), (6, 3)]);
@@ -31,30 +31,33 @@ fn main() {
     let g: AdjacencyList<usize, i32> = AdjacencyList(map);
 
     let start = 1;
-    let mut end = 15;
-    let DijkstraResult { route } = g.dijkstra(start);
-    println!("Esse é o caminho entre o início = 1 e fim = 15: ");
-    let mut path: Vec<(usize, usize)> = vec![];
+    let end = 15;
 
-    loop {
-        if let Some(node) = route.get(&end) {
-            match node.1 {
-                Some(parent) => {
-                    path.push((parent, end));
-                    end = parent;
-                }
-                None => {
-                    break;
-                }
-            }
-        } else {
-            break;
-        }
+    let BellmanFordResult {
+        dist,
+        pred,
+        has_negative_cycle,
+    } = g.bellman_ford(start);
+
+    if has_negative_cycle {
+        println!("O Grafo tem ciclo negativo");
+    } else {
+        println!("O Grafo não tem ciclo negativo");
     }
+
+    let mut current = end;
+    let mut path: Vec<(usize, i32)> = vec![];
+
+    while current != start {
+        path.push((pred[&current].unwrap(), dist[&current]));
+        current = pred[&current].unwrap();
+    }
+
     path.reverse();
-    for edge in path {
-        print!("{:?} ", edge);
+
+    println!("======================================");
+
+    for (p, d) in path {
+        println!("Predecessor: {} | Distância: {}", p, d);
     }
-    println!();
-    println!("Custo: {}", route.get(&15).unwrap().0)
 }

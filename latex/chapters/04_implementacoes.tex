@@ -6,84 +6,84 @@ Nesse capítulo serão mostradas as implementações reais de cada algoritmo, ac
 \section{Algoritmos de Árvore Geradora Mínima}
 \section{Algoritmos de Caminho Mais Curto}
 \subsection{Algoritmo de Dijkstra}
-Para a implementação de Dijkstra foi elaborado o seguinte iterador:
-\begin{lstlisting}[language=Rust, caption={Iterador de Dijkstra}]
-#[derive(Debug)]
-pub struct DijkstraIter<'a, T, G>
-where
-    T: Node,
-    G: Graph<T>,
-{
-    graph: &'a G,
-    visited: HashSet<T>,
-    distance: HashMap<T, i32>,
-    parent: HashMap<T, Option<T>>,
+Para a implementação de Dijkstra foi elaborado a seguinte \textit{struct}:
+\begin{lstlisting}[language=Rust, caption={Resultado de Dijkstra}]
+pub struct DijkstraResult<Node, Weight> {
+    pub route: HashMap<Node, (Weight, Option<Node>)>,
 }
 \end{lstlisting}
 
-Este iterador, além de guardar o grafo original a ser percorrido, guarda um conjunto de vértices visitados, um map/dicionário que contém a distância de cada vértice e um map/dicionário com o predecessor de cada vértice, caso haja. Agora, partindo para a implementação do iterador, temos:
+Esta estrutura é responsável por armazenar um dicionário que contém o resultado do Algortimo de Dijkstra, onde cada chave é um nó que aponta para uma dupla, que indica o predecessor até o nó e também a distância dele da origem.
 
-\begin{lstlisting}[language=Rust, caption={Implementação do iterador de Dijkstra}]
-impl<'a, T, G> Iterator for DijkstraIter<'a, T, G>
-where
-    T: Node,
-    G: Graph<T>,
-{
-    type Item = DijkstraEvent<T>;
+\begin{lstlisting}[language=Rust, caption={Implementação do Algoritmo de Dijkstra}]
+impl<N: Node, W: Weight> DijkstraResult<N, W> {
+    pub fn new(graph: &(impl WeightedGraph<N, W> + ?Sized), start: N) -> Self {
+        let mut route: HashMap<N, (W, Option<N>)> = HashMap::new();
+        let mut visited: HashSet<N> = HashSet::new();
+        let mut distance: HashMap<N, W> = HashMap::new();
+        let mut pred: HashMap<N, Option<N>> = HashMap::new();
+        distance.insert(start, W::zero());
+        pred.insert(start, None);
 
-    fn next(&mut self) -> Option<Self::Item> {
-        let mut unvisited_node: Option<(T, i32)> = None;
-
-        for node in self.graph.nodes() {
-            if !self.visited.contains(&node)
-                && let Some(distance) = self.distance.get(&node)
-                && (unvisited_node.is_none()
-                    || (unvisited_node.is_some() && distance < &unvisited_node.unwrap().1))
-            {
-                unvisited_node = Some((node, *distance));
-            }
+        for (neighbor, weight) in graph.weighted_neighbors(start) {
+            pred.insert(neighbor, Some(start));
+            distance.insert(neighbor, weight);
         }
 
-        match unvisited_node {
-            None => None,
-            Some((node, node_weight)) => {
-                self.visited.insert(node);
+        loop {
+            let mut unvisited_node: Option<(N, W)> = None;
+            for node in graph.nodes() {
+                if !visited.contains(&node)
+                    && let Some(distance) = distance.get(&node)
+                    && (unvisited_node.is_none()
+                        || (unvisited_node.is_some() && distance < &unvisited_node.unwrap().1))
+                {
+                    unvisited_node = Some((node, *distance));
+                }
+            }
 
-                if let Some(neighbors) = self.graph.neighbors(node) {
-                    for (neighbor, edge_weight) in neighbors {
-                        if !self.visited.contains(&neighbor) {
-                            let new_distance = edge_weight + node_weight;
+            match unvisited_node {
+                None => break,
+                Some((node, node_weight)) => {
+                    visited.insert(node);
 
-                            match self.distance.get(&neighbor) {
+                    for (neighbor, weight) in graph.weighted_neighbors(node) {
+                        if !visited.contains(&neighbor) {
+                            let new_distance = weight + node_weight;
+
+                            match distance.get(&neighbor) {
                                 Some(&neighbor_distance) => {
                                     if neighbor_distance > new_distance {
-                                        self.distance.insert(neighbor, new_distance);
-                                        self.parent.insert(neighbor, Some(node));
+                                        distance.insert(neighbor, new_distance);
+                                        pred.insert(neighbor, Some(node));
                                     }
                                 }
                                 None => {
-                                    self.distance.insert(neighbor, new_distance);
-                                    self.parent.insert(neighbor, Some(node));
+                                    distance.insert(neighbor, new_distance);
+                                    pred.insert(neighbor, Some(node));
                                 }
                             }
                         }
                     }
-                }
 
-                let mut parent: Option<T> = None;
-                if let Some(opt) = self.parent.get(&node) {
-                    parent = *opt;
-                }
+                    let mut parent: Option<N> = None;
+                    if let Some(opt) = pred.get(&node) {
+                        parent = *opt;
+                    }
 
-                Some(DijkstraEvent::Discover((node, node_weight, parent)))
+                    route.insert(node, (node_weight, parent));
+                }
             }
         }
+        Self { route }
     }
 }
 \end{lstlisting}
 
-A cada passo do iterador, ele calcula qual é o nó disponível com menor distância, adiciona-o no conjunto dos visitados, realiza o relaxamento de seus vizinhos e retorna o novo vértice do caminho mais curto junto de sua distância e de seu predecessor, caso haja. Caso não haja mais nós disponíveis no início do algoritmo, o iterador retorna \texttt{None}, indicando o fim do algoritmo.
+A função \textit{new} é responsável por executar o Algoritmo de Dijkstra e retornar seu resultado. Para manter o controle de vértices visitados, a distância até eles e também seus predecessores, criamos dicionários e conjuntos auxiliares para este processo. 
 
-Os consumidores deste iterador serão capazes de montar o caminho mais curto a partir do retorno de cada iteração, onde é retornada uma tripla com o nó que foi visitado, a distância até ele e o seu predecessor. Para encontrar o caminho mais curto entre dois nós, por exemplo, basta salvar todos estes retornos, acessar o elemento que contém o nó final da busca, capturar seu predecessor e explorá-lo até encontrar o nó inicial.
+O algoritmo inicia definindo a distância e o predecessor do nó inicial como 0 e \textit{None}, respectivamente, para então definir os mesmos elementos para os seus vizinhos, mas sem marcar ninguém como visitado. Após isso, inicia-se o loop principal: a cada iteração, é buscado o vértice com menor distância, para que este seja visitado e os seus vizinhos sejam relaxados, ou seja, tenham sua distância e predecessor atualizados caso seja vantajoso; ao visitar um vértice, note que ele é salvo no dicionário \texttt{route}, onde o vértice é a chave que aponta para a dupla com a sua distância e também seu predecessor. Ao acabar os nós não visitados, a função retorna a rota completa.
+
+Para encontrar, então, o caminho entre dois vértices, o consumidor da função pode acessar o dicionário \texttt{route} a partir do vértice final e ir explorando seus predecessores até encontrar o nó inicial. Isso traz solidez e isolamento para o algoritmo, que é capaz de cumprir com eficácia seu objetivo principal sem se preocupar com o modo em que as informações serão usadas.
 
 \section{Algoritmos de Grafos Eulerianos}

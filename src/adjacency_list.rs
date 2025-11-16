@@ -3,11 +3,12 @@ use crate::{Graph, UndirectedGraph};
 use std::collections::HashMap;
 
 /// Representa um grafo usando uma lista de adjacência.
-/// A lista é implementada como um *map*, onde cada chave
+/// A lista é implementada como um dicionário, onde cada chave
 /// guarda um nó e o valor é um conjunto de arestas.
 /// Cada elemento do conjunto de arestas é uma dupla:
-/// o 1º elemento indica o vértice adjacente e o
-/// 2º elemento o peso da aresta.
+/// - 1º elemento indica o vértice adjacente;
+/// - 2º elemento indica o peso da aresta.
+///
 #[derive(Debug, Clone, Default)]
 pub struct AdjacencyList<N: Node, W: Weight>(pub HashMap<N, Vec<(N, W)>>);
 
@@ -90,66 +91,6 @@ impl<N: Node, W: Weight> Graph<N> for AdjacencyList<N, W> {
             .get(&n)
             .into_iter()
             .flat_map(|set| set.iter().map(|(n, _)| *n))
-    }
-
-    fn bipartite(&self) -> bool {
-        todo!()
-        /*
-        let n = self.order();
-        if n == 0 {
-            return true;
-        }
-
-        let mut side = vec![None; n]; // None = uncolored, Some(0/1) = partition
-        let mut queue = std::collections::VecDeque::new();
-
-        for start in 0..n {
-            // skip already colored components
-            if side[start].is_some() {
-                continue;
-            }
-
-            side[start] = Some(0);
-            queue.push_back(start);
-
-            while let Some(u) = queue.pop_front() {
-                let u_side = side[u].unwrap();
-
-                for (v, &is_edge) in self.0[u].iter().enumerate() {
-                    if is_edge == 0 {
-                        continue;
-                    }
-
-                    if side[v].is_none() {
-                        side[v] = Some(1 - u_side);
-                        queue.push_back(v);
-                    } else if side[v] == Some(u_side) {
-                        return false; // adjacent nodes with same color
-                    }
-                }
-            }
-        }
-
-        true
-        */
-    }
-
-    fn underlying_graph(&self) -> Self {
-        todo!()
-        /*
-        let mut matrix: AdjacencyMatrix =
-            AdjacencyMatrix(vec![vec![0; self.0.len()]; self.0.len()]);
-
-        for (idx_r, row) in self.0.iter().enumerate() {
-            for (idx_c, col) in row.iter().enumerate() {
-                if *col == 1 && !matrix.has_edge(idx_c, idx_r) {
-                    matrix.add_undirected_edge(idx_r, idx_c);
-                }
-            }
-        }
-
-        matrix
-        */
     }
 }
 
