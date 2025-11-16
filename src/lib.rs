@@ -30,6 +30,7 @@ pub use graph::WeightedGraph;
 
 pub mod graphs {
     pub use crate::adjacency_list::AdjacencyList;
+    pub use crate::shortest_path::BellmanFordResult;
     pub use crate::shortest_path::DijkstraResult;
     pub use crate::traversal::BfsEvent;
     pub use crate::traversal::BfsIter;

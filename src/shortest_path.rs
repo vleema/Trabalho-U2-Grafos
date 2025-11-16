@@ -101,6 +101,89 @@ impl<N: Node, W: Weight> DijkstraResult<N, W> {
     }
 }
 
+/// Struct que guarda o Caminho Mais Curto de um vértice raiz a todos os outros,
+/// descoberto através do Algoritmo de Bellman-Ford.
+///
+/// [`BellmanFordResult`] guarda os campos:
+/// - `dist`: dicionário com a relação vértice-custo para alcançá-lo
+/// - `pred`: dicionário com precedência do caminho
+/// - `has_negative_cycle`: se tem ciclo ou não
+///
+/// Para montar o caminho mais curto de A até B, é possível iniciar uma busca no dicionário
+/// por B e adentrar em seus predecessores até A.
+pub struct BellmanFordResult<Node, Weight> {
+    pub dist: HashMap<Node, Weight>,
+    pub pred: HashMap<Node, Option<Node>>,
+    pub has_negative_cycle: bool,
+}
+
+impl<N: Node, W: Weight> BellmanFordResult<N, W> {
+    /// Método que executa o Algoritmo de Bellman-Ford e retorna um [`BellmanFordResult`]
+    ///
+    /// ## Argumentos
+    /// * `graph`: um tipo que implementa o traço [`WeightedGraph`], como [`AdjacencyList`]
+    /// * `start`: o nó inicial, deve implementar o tipo [`N`]
+    ///
+    /// ## Fluxo
+    /// * Marca todos os vértices com o predecessor `None`;
+    /// * Atribui distância infinita para todos os vértices, com exceção para `start`;
+    /// * Explora os vizinhos do vértice `start` e determina sua distância e predecessor
+    /// * Loop principal: será repetido o seguinte processo n - 1 vezes:
+    ///     * Para todo nó, verifique:
+    ///         * Para toda aresta (u,v) que "sai" desse nó:
+    ///             * Verifique a desigualdade triangular do custo das distâncias
+    ///             * Caso sejá mais vantajoso, atualize a distância e a precedência daquele
+    ///             vértice
+    /// * Loop secundário: para toda aresta, verifique:
+    ///     * Se (u,v) é a melhor alternativa para chegar no vizinho
+    ///     * Caso não, há um ciclo negativo
+    /// * Retorna um [`BellmanFordResult`] com as variáveis locais `dist`, `pred` e
+    /// `has_negative_cycle`.
+    pub fn new(g: &(impl WeightedGraph<N, W> + ?Sized), start: N) -> Self {
+        let mut dist = HashMap::new();
+        let mut pred = HashMap::new();
+
+        // inicialização
+        for n in g.nodes() {
+            pred.insert(n, None);
+            dist.insert(n, W::max_value());
+        }
+
+        dist.insert(start, W::zero());
+
+        // relaxa todas as arestar n-1 vezes
+        for _i in 1..g.order() {
+            for out_node in g.nodes() {
+                for (in_node, weight) in g.weighted_neighbors(out_node) {
+                    let new_dist = dist[&out_node].saturating_add(&weight);
+
+                    if dist[&in_node] > new_dist {
+                        dist.insert(in_node, new_dist);
+                        pred.insert(in_node, Some(out_node));
+                    }
+                }
+            }
+        }
+
+        let mut has_negative_cycle = false;
+
+        // itera por todas as arestas para verificar ciclos
+        for out_node in g.nodes() {
+            for (in_node, weight) in g.weighted_neighbors(out_node) {
+                if dist[&in_node] > dist[&out_node].saturating_add(&weight) {
+                    has_negative_cycle = true;
+                }
+            }
+        }
+
+        Self {
+            dist,
+            pred,
+            has_negative_cycle,
+        }
+    }
+}
+
 pub struct FloydWarshallResult<Node, Weight> {
     pub dist: HashMap<Node, HashMap<Node, Weight>>,
     pub pred: HashMap<Node, HashMap<Node, Node>>,
@@ -232,6 +315,42 @@ mod test {
         assert_eq!(route.get(&'D').unwrap().1, Some('B'));
         assert_eq!(route.get(&'E').unwrap().1, Some('B'));
         assert_eq!(route.get(&'F').unwrap().1, Some('E'));
+    }
+
+    #[test]
+    fn bellman_ford() {
+        let mut map: HashMap<char, Vec<(char, i32)>> = HashMap::new();
+
+        // exemplo do slide
+        map.insert('A', vec![('B', 10), ('F', 8)]);
+        map.insert('B', vec![('D', 2)]);
+        map.insert('C', vec![('B', 1)]);
+        map.insert('D', vec![('C', -2)]);
+        map.insert('E', vec![('B', -4), ('D', -1)]);
+        map.insert('F', vec![('E', 1)]);
+
+        let g: AdjacencyList<char, i32> = AdjacencyList(map);
+        let BellmanFordResult {
+            dist,
+            pred,
+            has_negative_cycle,
+        } = g.bellman_ford('A');
+
+        assert_eq!(dist[&'A'], 0); // A
+        assert_eq!(dist[&'B'], 5); // A -> F -> E -> B
+        assert_eq!(dist[&'C'], 5); // A -> F -> E -> B -> D -> C
+        assert_eq!(dist[&'D'], 7); // A -> F -> E -> B -> D
+        assert_eq!(dist[&'E'], 9); // A -> F -> E
+        assert_eq!(dist[&'F'], 8); // A -> F
+
+        assert_eq!(pred[&'A'], None); // A
+        assert_eq!(pred[&'B'], Some('E')); // A -> F -> E -> B
+        assert_eq!(pred[&'C'], Some('D')); // A -> F -> E -> B -> D -> C
+        assert_eq!(pred[&'D'], Some('B')); // A -> F -> E -> B -> D
+        assert_eq!(pred[&'E'], Some('F')); // A -> F -> E
+        assert_eq!(pred[&'F'], Some('A')); // A -> F
+
+        assert_eq!(has_negative_cycle, false);
     }
 
     #[test]

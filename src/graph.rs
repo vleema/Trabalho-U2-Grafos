@@ -1,8 +1,8 @@
-use num_traits::{Bounded, CheckedAdd, One, Zero};
+use num_traits::{Bounded, CheckedAdd, One, SaturatingAdd, Zero};
 
 use crate::{
     graphs::{BfsIter, BiconnectedComponentsIter, DfsEdgesIter, DfsIter, DijkstraResult, Edge},
-    shortest_path::FloydWarshallResult,
+    shortest_path::{BellmanFordResult, FloydWarshallResult},
 };
 use std::{hash::Hash, iter::Sum};
 
@@ -171,7 +171,7 @@ pub trait UndirectedGraph<N: Node>: Graph<N> {
 /// permitindo pesos negativos, positivos, pequenos, grandes, inteiros, decimais,
 /// entre demais tipos numéricos.
 ///
-pub trait Weight: CheckedAdd + Ord + Bounded + Zero + One + Copy {}
+pub trait Weight: CheckedAdd + Ord + Bounded + Zero + One + Copy + SaturatingAdd {}
 
 /// Implementação do traço `Weight`.
 ///
@@ -180,7 +180,7 @@ pub trait Weight: CheckedAdd + Ord + Bounded + Zero + One + Copy {}
 /// numéricos, indo de números sem sinal até de ponto flutuante.
 ///
 /// Vale notar que tais traços vêm, em sua maioria, do crate `num_traits`.
-impl<T> Weight for T where T: CheckedAdd + Ord + Bounded + One + Zero + Copy + Sum {}
+impl<T> Weight for T where T: CheckedAdd + Ord + Bounded + One + Zero + Copy + Sum + SaturatingAdd {}
 
 /// Traço que define um grafo ponderado genérico.
 ///
@@ -222,6 +222,21 @@ pub trait WeightedGraph<N: Node, W: Weight>: Graph<N> {
     ///   necessários para visualizar o caminho mais curto entre os vértices.
     fn dijkstra(&self, start: N) -> DijkstraResult<N, W> {
         DijkstraResult::new(self, start)
+    }
+
+    /// Executa o algoritmo de Bellman-Ford e fim de encontrar o caminho mais curto para
+    /// todos os vértices a partir de uma origem. Também identifica ciclos.
+    ///
+    /// # Argumentos
+    /// - `start`: origem da busca
+    ///
+    /// # Retorno
+    /// - Uma struct `BellmanFordResult` que contém:
+    /// - `dist`: armazena a distância de cada vértice para todos os outros;
+    /// - `pred`: armazena o predecessor de cada vértice para que possa chegar em cada um;
+    /// - `has_negative_cycle`: um booleano correspondente a presença ou não de um ciclo negativo no grafo;
+    fn bellman_ford(&self, start: N) -> BellmanFordResult<N, W> {
+        BellmanFordResult::new(self, start)
     }
 
     /// Executa o algoritmo de Floyd-Warshall no grafo a fim de encontrar o
