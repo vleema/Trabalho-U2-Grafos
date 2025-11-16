@@ -101,25 +101,20 @@ where
     type Item = KruskalEvent<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        while self.idx < self.edges.len() {
+        if self.idx < self.edges.len() {
             let (u, v, w) = self.edges[self.idx];
             self.idx += 1;
 
             if !self.connected_by_accepted(u, v) {
-                self.accepted_adj
-                    .entry(u)
-                    .or_insert_with(HashSet::new)
-                    .insert(v);
-                self.accepted_adj
-                    .entry(v)
-                    .or_insert_with(HashSet::new)
-                    .insert(u);
-                return Some(KruskalEvent::EdgeAdded((u, v, w)));
+                self.accepted_adj.entry(u).or_default().insert(v);
+                self.accepted_adj.entry(v).or_default().insert(u);
+                Some(KruskalEvent::EdgeAdded((u, v, w)))
             } else {
-                return Some(KruskalEvent::EdgeSkipped((u, v, w)));
+                Some(KruskalEvent::EdgeSkipped((u, v, w)))
             }
+        } else {
+            None
         }
-        None
     }
 }
 
@@ -157,7 +152,7 @@ where
         let mut visited: HashSet<T> = HashSet::with_capacity(nodes.len());
         let mut heap = BinaryHeap::new();
 
-        if let Some(&s) = nodes.get(0) {
+        if let Some(&s) = nodes.first() {
             visited.insert(s);
             for (v, w) in graph.weighted_neighbors(s) {
                 let (a, b) = if s <= v { (s, v) } else { (v, s) };
