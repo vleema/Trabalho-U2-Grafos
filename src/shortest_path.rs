@@ -209,10 +209,7 @@ impl<N: Node, W: Weight> FloydWarshallResult<N, W> {
         }
 
         let unwrap_dist = |dist: &HashMap<N, HashMap<N, W>>, i, j| {
-            dist.get(&i)
-                .and_then(|ds| ds.get(&j))
-                .copied()
-                .unwrap_or(W::max_value())
+            dist[&i].get(&j).copied().unwrap_or(W::max_value())
         };
 
         for k in g.nodes() {
