@@ -49,4 +49,55 @@ O Algoritmo de \cite{dijkstraarticle}, proposto pelo cientista da computação E
 O algoritmo acima escolhe o vértice para operar com base no que tem a menor distância alcançável. No início, ele visita o primeiro vértice e determina a distância para os vizinhos como sendo o peso de suas arestas; para os que não são alcançáveis, a distância é infinita. Então, enquanto existirem vértices não visitados, o algortimo seleciona o que tem a menor distância, o visita e então relaxa os seus vizinhos: o relaxamento consiste em mudar o caminho no qual o vizinho é visitado, caso isso melhore a distância até o vizinho. Isso é feito verificando se a distância do vizinho é pior do que a distância até o vértice atual + o peso da aresta que liga os dois. \\
 Após o relaxamento, tudo se repete até que todos os vértices estejam visitados. Então, ao final das iterações, teremos a menor rota de um ponto de origem até todos os demais vértices.
 
+\subsection{Algoritmo de Floyd-Warshall}
+
+O Algoritmo de Robert Floyd e Stephen Warshall, comumente chamado de
+Floyd-Warshall \cite{floydwarshallWikipedia} visa encontrar todos os
+caminhos mais curtos entre todos os vértices de um grafo ponderado. O
+algoritmo não detecta ciclos negativos, mas não é impedido por sua
+existência, diferentemente de \ref{sec:pseudocode_dijkstra}.
+
+A ideia geral do algoritmo é, para todos os vértices, adicionar um
+vértice intermediário no caminho entre outros dois se a distância
+final entre as extremidades for menor. Em termos de pseudocódigo, o
+algoritmo é descrito da seguinte forma:
+
+% tex-fmt: off
+\begin{algorithm}
+  \caption{Algoritmo de Floyd-Warshall}
+  \begin{algorithmic}[0]
+    \Require{$G = (V, A, c)$}
+    \Ensure{Um par $(D, P)$. Onde, para todo $i, j \in V$, $D = [d_{ij}]$
+      e $d_{ij}$ representa as distância entre o vértices $i$ e $j$.
+      $P = [p_{ij}]$ e $p_{ij}$ representa o vértice origem da última
+    aresta no caminho de $i$ até $j$.}
+    \Statex
+    \Function{Floyd-Warshall}{G = (V, A, c)}
+    \State{$D \gets \{d_{ij}\, |\, i, j \in V, d_{ij} = c_{ij} \text{ se }
+          (i, j) \in A \text{ ou } d_{ij} = \lim_{x \to +\infty}x \text{
+      caso contrário }   \}$}
+      \State{$P \gets \{p_{ij}\, |\, (i, j) \in A, p_{ij} = i \}$}
+      \For{$k \in V$}
+        \For{$i \in V$}
+          \For{$j \in V$}
+            \If{$d_{ik} + d_{kj} < d_{ij}$}
+              \State{$d_{ij} = d_{ik} + d_{kj}$}
+              \State{$p_{ij} = p_{kj}$}
+            \EndIf
+          \EndFor
+        \EndFor
+      \EndFor
+      \State \Return $(D, P)$
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+\FloatBarrier
+% tex-fmt: on
+
+O algoritmo primeiro começa inicializando a matriz de distâncias e
+predecessores com os valores conhecidos entre os vértices adjacentes.
+Após isso, o algoritmo, tenta inserir todo vértice $k$ no caminho
+entre outros vértices $i$ e $j$ se for vantajoso, atualizando $D$ e
+$P$ no processo.
+
 \section{Algoritmos em Grafos Eulerianos}
