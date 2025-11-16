@@ -171,7 +171,7 @@ pub trait UndirectedGraph<N: Node>: Graph<N> {
 
 pub trait Weight: CheckedAdd + Ord + Bounded + Zero + One + Copy {}
 
-impl<T> Weight for T where T: CheckedAdd + Ord + Bounded + One + Zero + Copy  + Sum{}
+impl<T> Weight for T where T: CheckedAdd + Ord + Bounded + One + Zero + Copy + Sum {}
 
 pub trait WeightedGraph<N: Node, W: Weight>: Graph<N> {
     type WeightedNeighbors<'a>: Iterator<Item = (N, W)>
