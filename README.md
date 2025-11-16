@@ -7,26 +7,26 @@ Trabalho-U2-Grafos/
 ├── README.md
 ├── Cargo.lock
 ├── Cargo.toml
-├── crates # Crates auxiliares
-│   └── cpp_api # Crate que implementa grafos em C++
-│   └── graph-io # Crate que implementa operações de leitura/escrita de grafos em arquivos
-├── examples # Programas de exemplo para testar implementações
-│   └── data/ # Arquivos .txt com grafos
-│   └── dot/ # Diagramas de grafos em .dot
+├── examples    # Programas de exemplo para testar implementações
+│   └── data/   # Arquivos .txt com grafos
+│   └── dot/    # Diagramas de grafos em .dot
 │   └── output/ # Imagens de grafos geradas através dos .dot
 ├── latex # Código fonte do documento latex
 │   ├── chapters/
 │   ├── CS_report.sty   # Definições e import de biblioteca
 │   ├── figures         # Imagens usadas no documento
 │   ├── main.tex        # Entry point do código fonte
+│   ├── Dockerfile      # Receita de uma imagem docker para compilar o documento
 │   ├── Makefile        # Para compilar o documento
 │   └── references.bib  # Referências usadas no texto
-└── src
-    ├── adjacency_list.rs   # Implementação de um grafo como lista de adjacência
-    ├── adjacency_matrix.rs # Implementação de um grafo como matriz de adjacência
-    ├── incidence_matrix.rs # Implementação de um grafo como matriz de incidência
-    ├── graph.rs            # Trait (Interface) de um grafo
-    └── lib.rs              # Re-exportação dos items da crate
+└── src # Código fonte da implementação dos algoritmos
+    ├── adjacency_list.rs        # Implementação de um grafo ponderado como lista de adjacência
+    ├── eulerian_cycle.rs        # Implementação de algoritmos relacionados a caminhos eulerianos
+    ├── graph.rs                 # Traços relacionadas a grafos (Grafo, Grafo não direcionado, Grafo ponderado)
+    ├── lib.rs                   # Módulos exportados pela biblioteca
+    ├── minimum_spanning_tree.rs # Algoritmos relacionados a criação de árvores geradoras mínimas
+    ├── shortest_path.rs         # Algoritmos de menor caminho
+    └── traversal.rs             # Algoritmos de travessia no grafo (DFS, BFS, etc)
     ...
 ```
 
@@ -34,18 +34,19 @@ Trabalho-U2-Grafos/
 
 ### Pré-requisitos
 
-- [Cargo 1.90.0 (com rustc 1.90.0 stable)](https://rust-lang.org/learn/get-started/)
+- [Cargo 1.90.0 (com rustc 1.93.0 nightly)](https://rust-lang.org/learn/get-started/)
 - [Texlive (full)](https://tug.org/texlive/) e Texlive-lang-portuguese: pode ser encontrado nos gerenciadores de pacote comuns.
 - [Docker](https://www.docker.com/): Alternativa para compilar o $\LaTeX$, caso não queira instalar o `texlive`
 - [Graphviz](https://www.graphviz.org/download/): Para converter os arquivos `.dot` em imagens `.png`
-- [Valgrind](https://valgrind.org/): Para prover informações para o Gungraun.
-- [Gungraun-runner](https://gungraun.github.io/gungraun/latest/html/installation/gungraun.html): Para executar os testes com o Gungraun.
-- [Gnuplot](http://gnuplot.info/) (opcional): Para a geração de gráficos do Criterion-rs.
-- [Clang](https://clang.llvm.org/): Compilador C++ para conseguir compilar API em C++.
 
 ### Compilação e testes
 
-#### : Compilador C++ para conseguir compilar API de C++Rust
+> [!NOTE]
+> Antes de testar o projeto, troque a versão do compilador para a versão nightly com:
+>
+> ```bash
+> rustup override set nightly
+> ```
 
 ```bash
 # Compila o projeto
@@ -112,15 +113,6 @@ docker pull vleema/latex-compiler:latest
 
 No diretório `examples/` estão presentes diversos scripts que demonstram os usos da biblioteca principal. Estes são:
 
-- `demo.rs`: arquivo com as principais operações descritas na proposta de implementação do trabalho. **Comece por aqui**.
-- `adjacency_list_operations.rs`: cria grafos em uma Lista de Adjacência e adiciona/exclui vértices e arestas;
-- `adjacency_matrix_operations.rs`: cria grafos em uma Matriz de Adjacência e adiciona/exclui vértices e arestas;
-- `classify_edges_graph.rs`: executa a DFS em um digrafo, salvando a árvore resultante no diretório `dot/classify_edges`
-- `classify_edges_undirected_graph.rs`: executa a DFS em um grafo não orientado, salvando a árvore resultante no diretório `dot/classify_edges`
-- `graph_bfs.rs`: executa a BFS em grafos orientados e não orientados, salvando a árvore resultante no diretório `dot/bfs`;
-- `graph_creation.rs`: importa alguns arquivos `.txt` e cria ou não o grafo correspondente;
-- `graph_exports.rs`: cria grafos, executa operações diversas e salva os resultados em `dot/graph_exports_example`;
-- `node_checks.rs`: cria grafos e calcula a ordem, tamanho e grau de cada vértice;
-- `underlying_graphs.rs`: cria digrafos e encontra seus grafos subjacentes;
+- `demo_dijkstra`: arquivo que mostra o funcionamento da implementação do dijkstra.
 
 Para executá-los, veja a seção anterior.
