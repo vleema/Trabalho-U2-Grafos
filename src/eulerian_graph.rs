@@ -42,11 +42,8 @@ where
     G: Graph<N>,
 {
     let is_directed = graph.is_directed();
-
-    // Calcular graus
     let (out_degree, in_degree) = calculate_degrees(graph);
 
-    // Verificar condições Eulerianas
     let (start_node, has_eulerian_path, has_eulerian_cycle) =
         check_eulerian_conditions(&out_degree, &in_degree, is_directed);
 
@@ -58,24 +55,19 @@ where
         };
     }
 
-    // Criar contador de arestas
     let mut edge_count = create_edge_count(graph);
-
     let mut stack = Vec::new();
     let mut path = Vec::new();
 
     stack.push(start_node);
 
     while let Some(current_vertex) = stack.last().copied() {
-        // Verificar se ainda há arestas saindo do vértice atual
         if let Some(neighbors) = edge_count.get_mut(&current_vertex) {
             if let Some((&next_vertex, count)) = neighbors.iter_mut()
                 .find(|(_, count)| **count > 0)
             {
-                // Remove a aresta
                 *count -= 1;
 
-                // Para grafos não direcionados, remove a aresta inversa
                 if !is_directed {
                     if let Some(rev_neighbors) = edge_count.get_mut(&next_vertex) {
                         if let Some(rev_count) = rev_neighbors.get_mut(&current_vertex) {
@@ -89,15 +81,12 @@ where
             }
         }
 
-        // Nenhuma aresta saindo, move para o path
         if let Some(vertex) = stack.pop() {
             path.push(vertex);
         }
     }
-
     path.reverse();
 
-    // Verificar se o caminho encontrado usa todas as arestas
     let total_edges: usize = if is_directed {
         out_degree.values().sum()
     } else {
@@ -119,13 +108,11 @@ fn calculate_degrees<N: Node, G: Graph<N>>(
     let mut out_degree = HashMap::new();
     let mut in_degree = HashMap::new();
 
-    // Inicializar todos os nós
     for node in graph.nodes() {
         out_degree.insert(node, 0);
         in_degree.insert(node, 0);
     }
 
-    // Calcular graus
     for node in graph.nodes() {
         let neighbors_count = graph.neighbors(node).count();
         out_degree.insert(node, neighbors_count);
@@ -137,7 +124,6 @@ fn calculate_degrees<N: Node, G: Graph<N>>(
         }
     }
 
-    // Para grafos não direcionados, in_degree = out_degree
     if !graph.is_directed() {
         for node in graph.nodes() {
             in_degree.insert(node, out_degree[&node]);
@@ -186,40 +172,46 @@ fn check_directed_eulerian<N: Node>(
     in_degree: &HashMap<N, usize>,
     nodes: &[N],
 ) -> (N, bool, bool) {
-    let mut plus_one_count = 0;
-    let mut minus_one_count = 0;
     let mut start_candidate = None;
+    let mut end_candidate = None;
+    let mut balanced_nodes = 0;
+    let mut total_nodes_with_edges = 0;
 
     for &node in nodes {
         let out = out_degree.get(&node).copied().unwrap_or(0);
         let inn = in_degree.get(&node).copied().unwrap_or(0);
 
         if out == 0 && inn == 0 {
-            continue; // Nó isolado
+            continue;
         }
 
-        let diff = out as i32 - inn as i32;
+        total_nodes_with_edges += 1;
 
-        match diff {
-            0 => { /* balanced */ }
-            1 => {
-                plus_one_count += 1;
-                start_candidate = Some(node);
-            }
-            -1 => {
-                minus_one_count += 1;
-            }
-            _ => {
+        if out == inn {
+            balanced_nodes += 1;
+        } else if out == inn + 1 {
+            if start_candidate.is_some() {
                 return (nodes[0], false, false);
             }
+            start_candidate = Some(node);
+        } else if inn == out + 1 {
+            if end_candidate.is_some() {
+                return (nodes[0], false, false);
+            }
+            end_candidate = Some(node);
+        } else {
+            return (nodes[0], false, false);
         }
     }
 
-    if plus_one_count == 0 && minus_one_count == 0 {
-        // Todos balanceados - ciclo Euleriano
-        (nodes[0], false, true)
-    } else if plus_one_count == 1 && minus_one_count == 1 {
-        // Exatamente um com +1 e um com -1 - caminho Euleriano
+    if balanced_nodes == total_nodes_with_edges {
+        let start = nodes.iter()
+            .find(|&&n| out_degree.get(&n).copied().unwrap_or(0) > 0)
+            .copied()
+            .unwrap_or(nodes[0]);
+        (start, true, true)
+    } else if start_candidate.is_some() && end_candidate.is_some()
+        && balanced_nodes == total_nodes_with_edges - 2 {
         (start_candidate.unwrap(), true, false)
     } else {
         (nodes[0], false, false)
@@ -230,29 +222,38 @@ fn check_undirected_eulerian<N: Node>(
     out_degree: &HashMap<N, usize>,
     nodes: &[N],
 ) -> (N, bool, bool) {
-    let mut odd_degree_count = 0;
-    let mut start_candidate = None;
+    let mut odd_degree_nodes = Vec::new();
 
     for &node in nodes {
         let degree = out_degree.get(&node).copied().unwrap_or(0);
-        if degree > 0 && degree % 2 != 0 {
-            odd_degree_count += 1;
-            start_candidate = Some(node);
+
+        // Ignorar nós isolados
+        if degree == 0 {
+            continue;
+        }
+
+        if degree % 2 != 0 {
+            odd_degree_nodes.push(node);
         }
     }
 
-    if odd_degree_count == 0 {
-        // Todos graus pares - ciclo Euleriano
-        (nodes[0], false, true)
-    } else if odd_degree_count == 2 {
-        // Exatamente dois vértices com grau ímpar - caminho Euleriano
-        (start_candidate.unwrap(), true, false)
-    } else {
-        (nodes[0], false, false)
+    match odd_degree_nodes.len() {
+        0 => {
+            let start = nodes.iter()
+                .find(|&&n| out_degree.get(&n).copied().unwrap_or(0) > 0)
+                .copied()
+                .unwrap_or(nodes[0]);
+            (start, false, true)
+        }
+        2 => {
+            (odd_degree_nodes[0], true, false)
+        }
+        _ => {
+            (nodes[0], false, false)
+        }
     }
 }
 
-// Implementação para grafos não direcionados para testes
 pub struct UndirectedGraph<N: Node> {
     edges: HashMap<N, Vec<N>>,
 }
@@ -293,12 +294,11 @@ impl<N: Node> Graph<N> for UndirectedGraph<N> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
     use crate::Graph;
 
     #[test]
     fn test_eulerian_cycle_directed() {
-        let mut graph = AdjacencyList::<char, i32>(HashMap::new());
+        let mut graph = AdjacencyList::<char, i32>::new();
 
         graph.add_node('A');
         graph.add_node('B');
@@ -308,15 +308,20 @@ mod tests {
         graph.add_edge('C', 'A');
 
         let result = hierholzer(&graph);
+        println!("Cycle result: path={:?}, has_cycle={}, has_path={}",
+                 result.path, result.has_eulerian_cycle, result.has_eulerian_path);
+
         assert!(result.has_eulerian_cycle, "Should have Eulerian cycle");
-        assert!(!result.has_eulerian_path, "Should not have Eulerian path");
+        assert!(result.has_eulerian_path, "Should also have Eulerian path (cycle is a special case)");
         assert!(!result.path.is_empty(), "Path should not be empty");
         assert_eq!(result.path.len(), 4, "Path should have 4 vertices for 3 edges");
+        assert_eq!(result.path[0], result.path[result.path.len()-1],
+                   "Cycle should start and end at same vertex");
     }
 
     #[test]
-    fn test_eulerian_path_directed() {
-        let mut graph = AdjacencyList::<char, i32>(HashMap::new());
+    fn test_eulerian_path_only_directed() {
+        let mut graph = AdjacencyList::<char, i32>::new();
 
         graph.add_node('A');
         graph.add_node('B');
@@ -327,9 +332,13 @@ mod tests {
         graph.add_edge('C', 'D');
 
         let result = hierholzer(&graph);
+        println!("Path only result: path={:?}, has_cycle={}, has_path={}",
+                 result.path, result.has_eulerian_cycle, result.has_eulerian_path);
         assert!(!result.has_eulerian_cycle, "Should not have Eulerian cycle");
         assert!(result.has_eulerian_path, "Should have Eulerian path");
         assert!(!result.path.is_empty(), "Path should not be empty");
+        assert_ne!(result.path[0], result.path[result.path.len()-1],
+                   "Path should start and end at different vertices");
     }
 
     #[test]
@@ -363,5 +372,15 @@ mod tests {
         assert!(!result.has_eulerian_cycle, "Should not have Eulerian cycle");
         assert!(result.has_eulerian_path, "Should have Eulerian path");
         assert!(!result.path.is_empty(), "Path should not be empty");
+    }
+
+    #[test]
+    fn test_single_node() {
+        let mut graph = AdjacencyList::<char, i32>::new();
+        graph.add_node('A');
+
+        let result = hierholzer(&graph);
+        assert!(result.has_eulerian_cycle, "Single node should have trivial Eulerian cycle");
+        assert_eq!(result.path, vec!['A']);
     }
 }

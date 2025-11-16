@@ -3,7 +3,7 @@
 #![feature(impl_trait_in_assoc_type)]
 
 mod adjacency_list;
-mod eulerian_path;
+pub mod eulerian_graph;
 mod graph;
 mod minimum_spanning_tree;
 mod shortest_path;
@@ -26,3 +26,5 @@ pub mod graphs {
     pub use crate::traversal::DfsIter;
     pub use crate::traversal::Edge;
 }
+
+pub use eulerian_graph::hierholzer;
