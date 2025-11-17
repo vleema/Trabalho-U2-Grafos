@@ -1,1 +1,11 @@
-\chapter{Implementação}
+\chapter{Conclusão}
+
+Implementar uma API para Grafos em Rust fornece diversas vantagens, indo desde a segurança de memória, mecanismo poderoso e nativo da linguagem até o uso de tipos genéricos, que permite uma poderosa reusabilidade das implementações, além do alto controle sobre a implementação. 
+
+O uso de traços para representação de tipos de dados e Grafos permite que as estruturas sejam fiéis à especificação algébrica dos dados e grafos, além de permitir que diferentes implementações compartilhem métodos entre si. As implementações padrões dentro destes também permitem que, independente da estrutura de dados, certos algoritmos sejam reutilizados sem oferecer custos adicionais.
+
+A criação dos exemplos presentes em \texttt{examples} permitem a rápida visualização das execuções dos algoritmos. Para além disso, a criação de testes unitários em cada arquivo permite o desenvolvedor atestar se o comportamento se mantém válido mesmo com mudanças. 
+
+A especificação da Lista de Adjacência como um \texttt{HashMap<T, Vec>} permite uma representação mais fiel e facilitada de grafos em comparação ao trabalho da Unidade 1, onde os nós eram todos numéricos e auto-gerenciados com índices. Desta forma, conseguimos obter comportamentos e dados mais próximos aos cenários reais. Adicionalmente, \texttt{HashMap} têm inserção e acessos como $O(1)$, o que é um avanço em relação à representação por \texttt{Vec}. 
+
+Mesmo com estas vantagens, reconhecemos algumas limitações neste projeto, onde a principal seria que não há nenhuma restrição estrutural e de tipagem que impeça um grafo orientado de usar funções de grafos não orientados, por exemplo. Isso pode bagunçar os dados do grafo e impedir que os algoritmos funcionem corretamente. Deveria ser feito um levantamento do que pode ser feito para o próximo projeto.
