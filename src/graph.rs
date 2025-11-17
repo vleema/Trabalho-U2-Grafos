@@ -1,7 +1,7 @@
 use num_traits::{Bounded, CheckedAdd, One, SaturatingAdd, Zero};
 
 use crate::{
-    graphs::{BfsIter, BiconnectedComponentsIter, DfsEdgesIter, DfsIter, DijkstraResult, Edge},
+    graphs::{BfsIter, DfsIter, DijkstraResult},
     shortest_path::{BellmanFordResult, FloydWarshallResult, ShortestPathTree},
 };
 use std::{fmt::Debug, hash::Hash, iter::Sum};
@@ -60,11 +60,14 @@ pub trait Graph<N: Node>: Clone {
     /// já existe, nada deve acontecer.
     fn add_node(&mut self, n: N);
 
-    /// Adds a **directed edge** from node `n` to node `m`.
+    /// Adiciona uma nova aresta no grafo que vai do nó `n` ao nó `m`.
     ///
-    /// If either node does not exist, this operation has no effect.
+    /// Se nenhum dos nós existe, nada acontece.
     fn add_edge(&mut self, n: N, m: N);
 
+    /// Remove a aresta no grafo que vai do nó `n` ao nó `m`.
+    ///
+    /// Se nenhum dos nós existe, nada acontece.
     fn remove_edge(&mut self, n: N, m: N);
 
     type Neighbors<'a>: Iterator<Item = N>
@@ -81,6 +84,7 @@ pub trait Graph<N: Node>: Clone {
         self.neighbors(n).any(|neighbor| neighbor == m)
     }
 
+    /// Retorna uma indicação de que o grafo atual é direcionado.
     fn is_directed(&self) -> bool {
         true
     }
@@ -100,56 +104,43 @@ pub trait Graph<N: Node>: Clone {
     fn bfs(&self, start: N) -> BfsIter<'_, N, Self> {
         BfsIter::new(self, start)
     }
-
-    /// Retorna um iterador para uma DFS capaz de classificar cada aresta encontrada
-    /// durante a iteração.
-    fn classify_edges(&self, start: N) -> DfsEdgesIter<'_, N, Self> {
-        DfsEdgesIter::new(self, start)
-    }
 }
 
-/// Trait defining operations for **undirected graphs**.
+/// Traço que define um grafo não orientado genérico.
 ///
-/// Extends [`Graph`], treating each edge as a bidirectional connection `(n <-> m)`.
-/// Provides utility methods for manipulation and analysis of undirected graphs,
-/// including connectivity checks, biconnected components, and edge classification.
+/// Este traço estende o traço [`Graph`] e trata cada aresta como bidirecional.
+///
+/// Qualquer tipo que implementar este traço e definir suas operações é capaz de
+/// representar um grafo não orientado, seja uma matriz de adjacência,
+/// estrela direta, lista de adjacência e quaisquer outras.
+///
+/// # Tipos Genéricos
+/// - `N`: Tipo que representa cada nó de um grafo, implementa `Node`.
 pub trait UndirectedGraph<N: Node>: Graph<N> {
+    /// Retorna uma indicação de que o grafo atual é direcionado.
     fn is_directed() -> bool {
         false
     }
-    fn biconnected_components(&self, start: N) -> BiconnectedComponentsIter<'_, N, Self> {
-        BiconnectedComponentsIter::new(self, start)
-    }
 
-    /// Adds an **undirected edge** `(n <-> m)` to the graph.
+    /// Adiciona uma aresta não direcionada no grafo entre os nós `n` e `m`.
     ///
-    /// Internally, this adds both directed edges `(n -> m)` and `(m -> n)`.
+    /// Internamente, adiciona duas arestas orientadas de `n` para `m` e de `m` para `n`.
     fn add_undirected_edge(&mut self, n: N, m: N) {
         self.add_edge(n, m);
         self.add_edge(m, n);
     }
 
+    /// Remove a aresta não direcionada no grafo entre os nós `n` e `m`.
+    ///
+    /// Internamente, remove as arestas orientadas tanto de `n` para `m` quanto `m` para `n`.
     fn remove_undirected_edge(&mut self, n: N, m: N) {
         self.remove_edge(n, m);
         self.remove_edge(m, n);
     }
 
-    /// Returns the **degree** of the given node,
-    /// considering all undirected connections.
+    /// Calcula o grau do vértice `n`.
     fn undirected_node_degree(&self, n: N) -> usize {
         self.neighbors(n).count()
-    }
-
-    /// Returns an iterator classifying the **undirected edges** of the graph.
-    ///
-    /// Only edges of types [`Edge::Tree`] and [`Edge::Back`] are considered,
-    /// as these represent meaningful relations in undirected graphs.
-    fn classify_undirected_edges<'a>(&'a self, start: N) -> impl Iterator<Item = Edge<N>>
-    where
-        N: 'a,
-    {
-        DfsEdgesIter::new(self, start)
-            .filter(|edge| matches!(edge, Edge::Tree(_, _) | Edge::Back(_, _)))
     }
 
     fn minimum_spanning_tree_kruskal(
