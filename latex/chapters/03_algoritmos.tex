@@ -8,6 +8,81 @@ a implementação feita em Rust, trazendo descrições e explicações que
 elucidem o funcionamento de cada algoritmo.
 
 \section{Algoritmos de Árvore Geradora Mínima}
+
+\subsection{Algoritmo de Kruskal}
+\label{sec:pseudocode_kruskal}
+
+O algoritmo de Kruskal, proposto por Joseph Kruskal em 1956, é um método
+clássico e eficiente para construir a Árvore Geradora Mínima (AGM) de um
+grafo ponderado. Seu funcionamento baseia-se em uma estratégia gulosa,
+selecionando iterativamente as arestas de menor peso que não formem ciclos.
+
+% tex-fmt: off
+\begin{algorithm}
+  \caption{Algoritmo de Kruskal}
+  \begin{algorithmic}[0]
+    \Require{$G := (V, A, c)$}
+    \Ensure{Uma árvore geradora mínima $T \subseteq A$ tal que $c(T) \leq c(T\prime)$ para toda $T\prime \subseteq A$ que conecta $V$.}
+    \Statex
+    \Function{Kruskal}{$G$}
+      \State{$T \gets \{\}$}
+      \State{$\mathsf{componentes} \gets \{\}$}
+      \For{$v \in V$}
+        \State{$\mathsf{componentes} \gets \mathsf{componentes} \cup \{(v, \{v\})\}$}
+      \EndFor
+      \For{$(u, v) \in A$ ordenado por $c_{uv}$ crescente}
+        \If{$\mathsf{encontrar}(u, \mathsf{componentes}) \neq \mathsf{encontrar}(v, \mathsf{componentes})$}
+          \State{$T \gets T \cup \{(u, v)\}$}
+          \State{$\mathsf{unir}(u, v, \mathsf{componentes})$}
+        \EndIf
+      \EndFor
+      \State \Return $T$
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+\FloatBarrier
+% tex-fmt: on
+
+O algoritmo de Kruskal inicia-se ordenando todas as arestas do grafo
+pelo seu peso. Em seguida, itera sobre essa lista ordenada, adicionando
+as arestas à árvore geradora mínima sempre que isso não resultar na
+formação de um ciclo.
+
+\subsection{Algoritmo de Prim}
+\label{sec:pseudocode_prim}
+
+O algoritmo de Prim, desenvolvido por Robert C. Prim em 1957, é um método clássico para construir a Árvore Geradora Mínima (AGM) de um grafo ponderado e conexo. Assim como o algoritmo de Kruskal, utiliza uma estratégia gulosa; entretanto, enquanto Kruskal seleciona arestas globalmente pelo menor peso, Prim cresce a árvore gradualmente a partir de um vértice inicial, sempre escolhendo a aresta de menor custo que conecta a árvore parcial a um novo vértice. Quando utilizado com estruturas como filas de prioridade, o algoritmo alcança excelente desempenho em grafos densos.
+
+% tex-fmt: off
+\begin{algorithm}
+  \caption{Algoritmo de Prim}
+  \begin{algorithmic}[0]
+    \Require{$G := (V, A, c)$, $r \in V$}
+    \Ensure{Uma árvore geradora mínima $T \subseteq A$ tal que $c(T) \leq c(T\prime)$ para toda $T\prime \subseteq A$ que conecta $V$.}
+    \Statex
+    \Function{Prim}{$G, r$}
+      \State{$T \gets \{\}$}
+      \State{$\mathsf{visitado} \gets []$}
+      \State{$\mathsf{visitado[r]} \gets 1$}
+      \While{$\exists (u, v) \in A: u \in \mathsf{visitado} \land v \notin \mathsf{visitado}$}
+        \State{$(u, v) \gets \min \{(u, v) \in A: u \in \mathsf{visitado} \land v \notin \mathsf{visitado}\}$}
+        \State{$T \gets T \cup \{(u, v)\}$}
+        \State{$\mathsf{visitado[v]} \gets 1$}
+      \EndWhile
+      \State \Return $T$
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+\FloatBarrier
+% tex-fmt: on
+
+Diferentemente do algoritmo de Kruskal, que começa com um conjunto vazio
+de arestas, o algoritmo de Prim inicia-se a partir de um vértice escolhido
+arbitariamente. A partir desse vértice, o algoritmo cresce a árvore
+geradora mínima, adicionando a aresta de menor peso que conecta um
+vértice da árvore a um vértice fora dela, até que todos os vértices
+estejam incluídos na árvore.
+
 \section{Algoritmos de Caminho Mais Curto}
 
 \subsection{Algoritmo de Dijkstra}
