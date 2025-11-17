@@ -126,6 +126,9 @@ vez realizado o relaxamento de arestas, a desigualdade triangular será verifica
 novamente para toda a aresta, pois caso inda seja possível diminuir o custo ao
 percurrer alguma aresta do grafo há um ciclo negativo.
 
+Note que este se trata de um algoritmo de complexidade $O(nm)$ em essência. Entretanto,
+a iteração a mais para verificar por ciclos negativos o faz ser $O(n{m}^2)$
+
 \subsection{Algoritmo de Floyd-Warshall}
 \label{sec:pseudocode_floyd-warshall}
 
