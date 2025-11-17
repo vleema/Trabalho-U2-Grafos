@@ -25,7 +25,7 @@ impl<N: Node> HierholzerResult<N> {
             };
         } else if has_eulerian_cycle && has_eulerian_path && out_degree.len() == 1 {
             return HierholzerResult {
-                path: out_degree.iter().map(|(k, _)| *k).collect::<Vec<N>>(),
+                path: out_degree.keys().copied().collect::<Vec<N>>(),
                 has_eulerian_cycle,
                 has_eulerian_path,
             };
@@ -38,30 +38,28 @@ impl<N: Node> HierholzerResult<N> {
         loop {
             if stack.is_empty() && work_graph.neighbors(start_node).count() == 0 {
                 break;
+            } else if work_graph.neighbors(start_node).count() > 0 {
+                stack.push(start_node);
+
+                let next_neighbor = work_graph.neighbors(start_node).next();
+
+                if let Some(neighbor) = next_neighbor {
+                    if is_directed {
+                        work_graph.remove_edge(start_node, neighbor);
+                    } else {
+                        work_graph.remove_undirected_edge(start_node, neighbor);
+                    }
+
+                    start_node = neighbor;
+                }
             } else {
-                if work_graph.neighbors(start_node).count() > 0 {
-                    stack.push(start_node);
+                path.push(start_node);
+                if let Some(s) = stack.pop() {
+                    start_node = s;
+                }
 
-                    let next_neighbor = work_graph.neighbors(start_node).next();
-
-                    if let Some(neighbor) = next_neighbor {
-                        if is_directed {
-                            work_graph.remove_edge(start_node, neighbor);
-                        } else {
-                            work_graph.remove_undirected_edge(start_node, neighbor);
-                        }
-
-                        start_node = neighbor;
-                    }
-                } else {
+                if stack.is_empty() {
                     path.push(start_node);
-                    if let Some(s) = stack.pop() {
-                        start_node = s;
-                    }
-
-                    if stack.is_empty() {
-                        path.push(start_node);
-                    }
                 }
             }
         }
