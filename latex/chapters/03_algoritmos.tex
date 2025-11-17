@@ -51,7 +51,15 @@ formação de um ciclo.
 \subsection{Algoritmo de Prim}
 \label{sec:pseudocode_prim}
 
-O algoritmo de Prim, desenvolvido por Robert C. Prim em 1957, é um método clássico para construir a Árvore Geradora Mínima (AGM) de um grafo ponderado e conexo. Assim como o algoritmo de Kruskal, utiliza uma estratégia gulosa; entretanto, enquanto Kruskal seleciona arestas globalmente pelo menor peso, Prim cresce a árvore gradualmente a partir de um vértice inicial, sempre escolhendo a aresta de menor custo que conecta a árvore parcial a um novo vértice. Quando utilizado com estruturas como filas de prioridade, o algoritmo alcança excelente desempenho em grafos densos.
+O algoritmo de Prim, desenvolvido por Robert C. Prim em 1957, é um
+método clássico para construir a Árvore Geradora Mínima (AGM) de um
+grafo ponderado e conexo. Assim como o algoritmo de Kruskal, utiliza
+uma estratégia gulosa; entretanto, enquanto Kruskal seleciona arestas
+globalmente pelo menor peso, Prim cresce a árvore gradualmente a
+partir de um vértice inicial, sempre escolhendo a aresta de menor
+custo que conecta a árvore parcial a um novo vértice. Quando
+utilizado com estruturas como filas de prioridade, o algoritmo
+alcança excelente desempenho em grafos densos.
 
 % tex-fmt: off
 \begin{algorithm}
@@ -153,8 +161,10 @@ através de publicações feitas num período de tempo muito próximo. Seu nome
 homenageia os matemáticos americanos autores dos artigos que o conceberam,
 \cite{bellmanaarticle} e \cite{fordarticle}. Esse se trata de um dos algoritmos
 mais conhecidos dentro da Teoria dos Grafos, especialmente dentro do estudo de
-dos problemas de caminho mínimo, e diferente de \ref{sec:pseudocode_dijkstra}, não
-se trata de um algoritmo guloso. Além de ter a capacidade de lidar com arestas de
+dos problemas de caminho mínimo, e diferente de
+\ref{sec:pseudocode_dijkstra}, não
+se trata de um algoritmo guloso. Além de ter a capacidade de lidar
+com arestas de
 peso negativo e identificar ciclos negativos.
 
 \begin{algorithm}
@@ -164,28 +174,28 @@ peso negativo e identificar ciclos negativos.
     \Ensure{Sequência de $v \in V$ ordenados que formam o caminho mais curto}
     \Statex
     \Function{Bellman-Ford}{G = (V, A, c), s}
-      \State{$\mathsf{predecessor} \gets []$}
-      \State{$\mathsf{distancia} \gets []$}
-      \For{$v \in V$} \Comment{Inicialização}
-          \State{$\mathsf{predecessor[v]} \gets \emptyset$}
-          \State{$\mathsf{distancia[v]} \gets \infty$}
-      \EndFor
-      \State{$\mathsf{distancia[c]} \gets 0$}
-      \For{$i \in [1,n)$}
-        \For{$(u,v) \in A$} \Comment{Relaxamento de arestas}
-          \If{$\mathsf{distancia[v]} > \mathsf{distancia[u]} + custo(u,v)$}
-            \State{$\mathsf{distancia[v]} \gets \mathsf{distancia[u]} + + custo(u,v)$}
-            \State{$\mathsf{predecessor[v]} \gets u$}
-          \EndIf
-        \EndFor
-      \EndFor
-      \State{$ciclo \gets falso$}
-      \For{$(u,v) \in A$} \Comment{Verifica ciclo negativo}
-        \If{$\mathsf{distancia[v]} > \mathsf{distancia[u]} + custo(u,v)$}
-          \State{$ciclo \gets verdadeiro$}
-        \EndIf
-      \EndFor
-      \State \Return{$(\mathsf{predecessor, distancia, ciclo})$}
+    \State{$\mathsf{predecessor} \gets []$}
+    \State{$\mathsf{distancia} \gets []$}
+    \For{$v \in V$} \Comment{Inicialização}
+    \State{$\mathsf{predecessor[v]} \gets \emptyset$}
+    \State{$\mathsf{distancia[v]} \gets \infty$}
+    \EndFor
+    \State{$\mathsf{distancia[c]} \gets 0$}
+    \For{$i \in [1,n)$}
+    \For{$(u,v) \in A$} \Comment{Relaxamento de arestas}
+    \If{$\mathsf{distancia[v]} > \mathsf{distancia[u]} + custo(u,v)$}
+    \State{$\mathsf{distancia[v]} \gets \mathsf{distancia[u]} + + custo(u,v)$}
+    \State{$\mathsf{predecessor[v]} \gets u$}
+    \EndIf
+    \EndFor
+    \EndFor
+    \State{$ciclo \gets falso$}
+    \For{$(u,v) \in A$} \Comment{Verifica ciclo negativo}
+    \If{$\mathsf{distancia[v]} > \mathsf{distancia[u]} + custo(u,v)$}
+    \State{$ciclo \gets verdadeiro$}
+    \EndIf
+    \EndFor
+    \State \Return{$(\mathsf{predecessor, distancia, ciclo})$}
     \EndFunction
   \end{algorithmic}
 \end{algorithm}
@@ -195,13 +205,16 @@ O algoritmo consiste em três partes: Inicialização, relaxamento de arestas e
 verificação de ciclo negativos. A primeira etapa envolve percorrer todos os
 vértices do grafo a fim de inicializar as variáveis de distância e predecessor.
 A segunda diz respeito ao relaxamento de arestas, ou seja, usar a desigualdade
-triangular para verificar se, dada uma aresta que liga os vértices A e B, é possível
+triangular para verificar se, dada uma aresta que liga os vértices A
+e B, é possível
 obter um custo menor de A para B percorrendo um terceiro vértice. E por fim, uma
-vez realizado o relaxamento de arestas, a desigualdade triangular será verificada
+vez realizado o relaxamento de arestas, a desigualdade triangular
+será verificada
 novamente para toda a aresta, pois caso inda seja possível diminuir o custo ao
 percurrer alguma aresta do grafo há um ciclo negativo.
 
-Note que este se trata de um algoritmo de complexidade $O(nm)$ em essência. Entretanto,
+Note que este se trata de um algoritmo de complexidade $O(nm)$ em
+essência. Entretanto,
 a iteração a mais para verificar por ciclos negativos o faz ser $O(n{m}^2)$
 
 \subsection{Algoritmo de Floyd-Warshall}
@@ -224,7 +237,7 @@ algoritmo é descrito da seguinte forma:
   \begin{algorithmic}[0]
     \Require{$G := (V, A, c)$}
     \Ensure{Um par $(D, P)$. Onde, para todo $i, j \in V$, $D := [d_{ij}]$
-      e $d_{ij}$ representa as distância entre o vértices $i$ e $j$.
+      e $d_{ij}$ representa a distância entre o vértices $i$ e $j$.
       $P := [p_{ij}]$ e $p_{ij}$ representa o vértice origem da última
     aresta no caminho de $i$ até $j$.}
     \Statex

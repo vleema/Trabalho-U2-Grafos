@@ -10,7 +10,7 @@ implementações tomadas.
 \subsection{Algoritmo de Kruskal}
 
 \begin{listing}[H]
-	\caption{Construtor do Iterador de Kruskal}
+  \caption{Construtor do Iterador de Kruskal}
 \begin{minted}{rust}
 pub fn new(graph: &'a G) -> Self {
     let nodes: Vec<T> = graph.nodes().collect();
@@ -43,7 +43,7 @@ pub fn new(graph: &'a G) -> Self {
 \end{listing}
 
 \begin{listing}[H]
-	\caption{Iteração de Kruskal}
+  \caption{Iteração de Kruskal}
 \begin{minted}{rust}
 impl<'a, T, G> Iterator for KruskalIter<'a, T, G>
 where
@@ -72,16 +72,29 @@ where
 \end{minted}
 \end{listing}
 
-A função \texttt{new} prepara previamente todos os dados necessários para a execução incremental do Algoritmo de Kruskal. Ela coleta todas as arestas do grafo, organiza‑as em um vetor e as ordena pelo peso, garantindo que possam ser examinadas da menor para a maior. Também é inicializada a estrutura \texttt{accepted\_adj}, que representa o subgrafo formado apenas pelas arestas já selecionadas na construção da solução.
+A função \texttt{new} prepara previamente todos os dados necessários
+para a execução incremental do Algoritmo de Kruskal. Ela coleta todas
+as arestas do grafo, organiza‑as em um vetor e as ordena pelo peso,
+garantindo que possam ser examinadas da menor para a maior. Também é
+inicializada a estrutura \texttt{accepted\_adj}, que representa o
+subgrafo formado apenas pelas arestas já selecionadas na construção da solução.
 
-A lógica do algoritmo é realizada de forma incremental no método \texttt{next()}. A cada chamada, o iterador processa a próxima aresta da lista ordenada. Para decidir se ela deve ser incluída na árvore geradora, o método verifica se seus vértices já estão conectados no subgrafo parcial armazenado em \texttt{accepted\_adj}. Caso ainda estejam conectados, isto é, caso a inclusão da aresta não forme um ciclo, a aresta é incorporada à solução e registrada na estrutura \texttt{accepted\_adj}. 
+A lógica do algoritmo é realizada de forma incremental no método
+\texttt{next()}. A cada chamada, o iterador processa a próxima aresta
+da lista ordenada. Para decidir se ela deve ser incluída na árvore
+geradora, o método verifica se seus vértices já estão conectados no
+subgrafo parcial armazenado em \texttt{accepted\_adj}. Caso ainda
+estejam conectados, isto é, caso a inclusão da aresta não forme um
+ciclo, a aresta é incorporada à solução e registrada na estrutura
+\texttt{accepted\_adj}.
 
-Ao final das iterações, as arestas acumuladas em \texttt{accepted\_adj} constituem o resultado do algoritmo.
+Ao final das iterações, as arestas acumuladas em
+\texttt{accepted\_adj} constituem o resultado do algoritmo.
 
 \subsection{Algoritmo de Prim}
 
 \begin{listing}[H]
-	\caption{Construtor do Iterador de Prim}
+  \caption{Construtor do Iterador de Prim}
 \begin{minted}{rust}
 pub fn new(graph: &'a G) -> Self {
     let nodes: Vec<T> = graph.nodes().collect();
@@ -107,7 +120,7 @@ pub fn new(graph: &'a G) -> Self {
 \end{listing}
 
 \begin{listing}[H]
-	\caption{Iteração de Prim}
+  \caption{Iteração de Prim}
 \begin{minted}{rust}
 impl<'a, T, G> Iterator for PrimIter<'a, T, G>
 where
@@ -149,11 +162,32 @@ where
 \end{minted}
 \end{listing}
 
-A função \texttt{new()} prepara previamente todos os dados necessários para a execução incremental do Algoritmo de Prim. Inicialmente, escolhe-se um vértice arbitrário como ponto de partida (neste caso, o primeiro retornado por \texttt{graph.nodes()}). Esse vértice é marcado como visitado e todas as suas arestas incidentes são inseridas em um heap mínimo, que servirá como estrutura de prioridade para selecionar sempre a próxima aresta de menor peso que expande a árvore. São também inicializados os conjuntos \texttt{visited} e \texttt{heap}, que representarão, respectivamente, os vértices já incorporados à solução e o conjunto de arestas candidatas que conectam o conjunto visitado ao restante do grafo.
+A função \texttt{new()} prepara previamente todos os dados
+necessários para a execução incremental do Algoritmo de Prim.
+Inicialmente, escolhe-se um vértice arbitrário como ponto de partida
+(neste caso, o primeiro retornado por \texttt{graph.nodes()}). Esse
+vértice é marcado como visitado e todas as suas arestas incidentes
+são inseridas em um heap mínimo, que servirá como estrutura de
+prioridade para selecionar sempre a próxima aresta de menor peso que
+expande a árvore. São também inicializados os conjuntos
+\texttt{visited} e \texttt{heap}, que representarão, respectivamente,
+os vértices já incorporados à solução e o conjunto de arestas
+candidatas que conectam o conjunto visitado ao restante do grafo.
 
-A lógica do algoritmo é realizada de forma incremental no método \texttt{next()}. A cada chamada, o iterador remove do heap a aresta de menor peso disponível. Se essa aresta conecta um vértice já visitado a um ainda não visitado, então ela é aceita na árvore geradora mínima. O vértice recém‑incluído é adicionado a \texttt{visited}, e todas as suas arestas são inseridas no heap, permitindo que novas expansões sejam consideradas. Caso contrário, se a aresta conecta dois vértices já visitados, ela é descartada, pois sua inclusão criaria um ciclo.
+A lógica do algoritmo é realizada de forma incremental no método
+\texttt{next()}. A cada chamada, o iterador remove do heap a aresta
+de menor peso disponível. Se essa aresta conecta um vértice já
+visitado a um ainda não visitado, então ela é aceita na árvore
+geradora mínima. O vértice recém‑incluído é adicionado a
+\texttt{visited}, e todas as suas arestas são inseridas no heap,
+permitindo que novas expansões sejam consideradas. Caso contrário, se
+a aresta conecta dois vértices já visitados, ela é descartada, pois
+sua inclusão criaria um ciclo.
 
-Ao final das iterações, quando todos os vértices tiverem sido incorporados ao conjunto \texttt{visited}, o método \texttt{next()} deixa de produzir eventos e a execução se encerra. As arestas aceitas ao longo do processo formam a árvore geradora mínima do grafo.
+Ao final das iterações, quando todos os vértices tiverem sido
+incorporados ao conjunto \texttt{visited}, o método \texttt{next()}
+deixa de produzir eventos e a execução se encerra. As arestas aceitas
+ao longo do processo formam a árvore geradora mínima do grafo.
 
 \section{Algoritmos de Caminho Mais Curto}
 
@@ -266,7 +300,8 @@ cumprir com eficácia seu objetivo principal sem se preocupar com o
 modo em que as informações serão usadas.
 
 \subsection{Algoritmo de Bellman-Ford}
-Já para a implementação de Bellman-Ford foi elaborado a seguinte \textit{struct}:
+Já para a implementação de Bellman-Ford foi elaborado a seguinte
+\textit{struct}:
 
 \begin{listing}[H]
   \caption{Estrutura que encapsula o resultado do Algoritmo de Bellman-Ford}
@@ -279,15 +314,20 @@ pub struct BellmanFordResult<Node, Weight> {
 \end{minted}
 \end{listing}
 
-Tal estrutura contém três informações de relevância para a análise do resultado do algoritmo:
+Tal estrutura contém três informações de relevância para a análise do
+resultado do algoritmo:
 
 \begin{itemize}
-    \item \textbf{dist:} O dicionário que contém a relação de custo acumulado para percorrer o grafo até determinado vértice.
-    \item \textbf{pred:} Dicionário que indica a ordem de precedência do melhor caminho dado um vértice inicial.
-    \item \textbf{has-negative-cycle:} Um booleano correspondente há presença ou não de ciclo negativo no grafo.
+  \item \textbf{dist:} O dicionário que contém a relação de custo
+    acumulado para percorrer o grafo até determinado vértice.
+  \item \textbf{pred:} Dicionário que indica a ordem de precedência
+    do melhor caminho dado um vértice inicial.
+  \item \textbf{has-negative-cycle:} Um booleano correspondente há
+    presença ou não de ciclo negativo no grafo.
 \end{itemize}
 
-E através dessa estrutura, é implementado o método \texttt{new} para na interface correspondente:
+E através dessa estrutura, é implementado o método \texttt{new} para
+na interface correspondente:
 
 \begin{listing}[H]
   \caption{Interface do algoritmo de Bellman-Ford}
@@ -346,7 +386,10 @@ E segue a implementação do método:
 \end{minted}
 \end{listing}
 
-A execução do Algoritmo de Bellman-Ford se dá através da chamada da função \textit{new}. Nela, dado um grafo e um vértice inicial, o algoritmo é excecutado e tem seu resultado encapsulado através do \textit{BellmanFordResult}.
+A execução do Algoritmo de Bellman-Ford se dá através da chamada da
+função \textit{new}. Nela, dado um grafo e um vértice inicial, o
+algoritmo é excecutado e tem seu resultado encapsulado através do
+\textit{BellmanFordResult}.
 \subsection{Algoritmo de Floyd-Warshall}
 \label{sec:code_floyd-warshall}
 
@@ -585,7 +628,7 @@ Novamente, a estrutura é genérica a qualquer tipo de vértice e custo,
 identificados por \texttt{Node} e \texttt{Weight}. \texttt{node}
 representa o valor de um vértice no nó da árvore e \texttt{childs}
 representam os nós filhos da árvore. \texttt{childs} é uma lista de
-tuplas de custo e árvores, o custo nessa tupla representa o custo de
+tuplas de custo e árvore, o custo nessa tupla representa o custo de
 percorrer a aresta para o nó filho no segundo argumento da tupla.
 
 Quanto a interface do algoritmo, ele será implementado como o
@@ -632,7 +675,7 @@ fn build_tree<N: Node, W: Weight>(
 A implemnetação segue fielmente seu pseudocódigo, a principal
 diferença está na condicional \texttt{visited.insert(k)}, que valora
 para verdadeiro somente se foi possível inserir o nó \texttt{k} no
-dicionário de visitados, ou seja, não houve repetição.
+dicionário de visitados, ou seja, se não houve repetição.
 
 Por fim, definimos a função principal como:
 
