@@ -30,13 +30,16 @@ impl<N: Node, W: Weight> Graph<N> for AdjacencyList<N, W> {
             .sum()
     }
 
-    fn node_degrees(&self, _n: N) -> (usize, usize) {
-        todo!()
-        /*
-        let out_deg = self.0[n].iter().filter(|&&v| v != 0).count();
-        let in_deg = self.0.iter().filter(|row| row[n] != 0).count();
+    fn node_degrees(&self, n: N) -> (usize, usize) {
+        let out_deg = self.0.get(&n).map_or(0, |neighbors| neighbors.len());
+
+        let in_deg = self
+            .0
+            .iter()
+            .filter(|(_, neighbors)| neighbors.iter().any(|(target, _)| *target == n))
+            .count();
+
         (in_deg, out_deg)
-            */
     }
 
     fn nodes(&self) -> impl Iterator<Item = N> {
@@ -47,38 +50,12 @@ impl<N: Node, W: Weight> Graph<N> for AdjacencyList<N, W> {
         self.0.insert(n, Vec::new());
     }
 
-    fn remove_node(&mut self, _n: N) {
-        todo!()
-        /*
-        if n < self.0.len() {
-            self.0.remove(n);
-            for row in self.0.iter_mut() {
-                for idx in n + 1..row.len() {
-                    row[idx - 1] = row[idx];
-                }
-                row.pop();
-            }
-        }
-        */
-    }
-
     fn add_edge(&mut self, n: N, m: N) {
         if self.0.contains_key(&m) {
             self.0
                 .entry(n)
-                .and_modify(|neighbors| neighbors.push((n, W::one())));
+                .and_modify(|neighbors| neighbors.push((m, W::one())));
         }
-    }
-
-    fn remove_edge(&mut self, _n: N, _m: N) {
-        todo!()
-        /*
-        if let Some(edges) = self.0.get_mut(n)
-            && let Some(edge) = edges.get_mut(m)
-        {
-            *edge = 0;
-        }
-        */
     }
 
     type Neighbors<'a>
@@ -92,60 +69,17 @@ impl<N: Node, W: Weight> Graph<N> for AdjacencyList<N, W> {
             .into_iter()
             .flat_map(|set| set.iter().map(|(n, _)| *n))
     }
-}
 
-impl<N: Node, W: Weight> UndirectedGraph<N> for AdjacencyList<N, W> {
-    fn undirected_size(&self) -> usize {
-        todo!()
-        /*
-        let mut size = 0;
-        for i in 0..self.order() {
-            for j in 0..=i {
-                if self.0[i][j] > 0 {
-                    size += 1;
-                }
-            }
+    fn remove_edge(&mut self, n: N, m: N) {
+        if self.0.contains_key(&n) {
+            self.0
+                .entry(n)
+                .and_modify(|neighbors| neighbors.retain(|neighbor| neighbor.0 != m));
         }
-        size
-        */
-    }
-
-    fn connected(&self) -> bool {
-        todo!()
-        /*
-        let n = self.order();
-        if n == 0 {
-            return true;
-        }
-
-        let mut visited = vec![false; n];
-        let mut stack = vec![0];
-        visited[0] = true;
-
-        while let Some(u) = stack.pop() {
-            for (v, &is_edge) in self.0[u].iter().enumerate() {
-                if is_edge > 0 && !visited[v] {
-                    visited[v] = true;
-                    stack.push(v);
-                }
-            }
-        }
-
-        visited.into_iter().all(|v| v)
-        */
-    }
-
-    fn undirected_node_degree(&self, _n: N) -> usize {
-        todo!()
-        /*
-        if let Some(row) = self.0.get(node) {
-            row.iter().filter(|&&val| val != 0).count()
-        } else {
-            0
-        }
-        */
     }
 }
+
+impl<N: Node, W: Weight> UndirectedGraph<N> for AdjacencyList<N, W> {}
 
 impl<N: Node, W: Weight> WeightedGraph<N, W> for AdjacencyList<N, W> {
     fn add_weighted_edge(&mut self, n: N, m: N, w: W) {

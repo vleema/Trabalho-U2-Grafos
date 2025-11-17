@@ -22,7 +22,7 @@ where
 pub struct KruskalIter<'a, T, G>
 where
     T: Node + Ord,
-    G: UndirectedGraph<T> + WeightedGraph<T, i32> + ?Sized,
+    G: UndirectedGraph<T> + WeightedGraph<T, i32>,
 {
     _graph: &'a G,
     edges: Vec<(T, T, i32)>,
@@ -34,7 +34,7 @@ where
 impl<'a, T, G> KruskalIter<'a, T, G>
 where
     T: Node + Ord,
-    G: UndirectedGraph<T> + WeightedGraph<T, i32> + ?Sized,
+    G: UndirectedGraph<T> + WeightedGraph<T, i32>,
 {
     pub fn new(graph: &'a G) -> Self {
         let nodes: Vec<T> = graph.nodes().collect();
@@ -96,7 +96,7 @@ where
 impl<'a, T, G> Iterator for KruskalIter<'a, T, G>
 where
     T: Node + Ord,
-    G: UndirectedGraph<T> + WeightedGraph<T, i32> + ?Sized,
+    G: UndirectedGraph<T> + WeightedGraph<T, i32>,
 {
     type Item = KruskalEvent<T>;
 
@@ -134,7 +134,7 @@ where
 pub struct PrimIter<'a, T, G>
 where
     T: Node + Ord,
-    G: UndirectedGraph<T> + WeightedGraph<T, i32> + ?Sized,
+    G: UndirectedGraph<T> + WeightedGraph<T, i32>,
 {
     _graph: &'a G,
     visited: HashSet<T>,
@@ -145,7 +145,7 @@ where
 impl<'a, T, G> PrimIter<'a, T, G>
 where
     T: Node + Ord,
-    G: UndirectedGraph<T> + WeightedGraph<T, i32> + ?Sized,
+    G: UndirectedGraph<T> + WeightedGraph<T, i32>,
 {
     pub fn new(graph: &'a G) -> Self {
         let nodes: Vec<T> = graph.nodes().collect();
@@ -172,7 +172,7 @@ where
 impl<'a, T, G> Iterator for PrimIter<'a, T, G>
 where
     T: Node + Ord,
-    G: UndirectedGraph<T> + WeightedGraph<T, i32> + ?Sized,
+    G: UndirectedGraph<T> + WeightedGraph<T, i32>,
 {
     type Item = PrimEvent<T>;
 

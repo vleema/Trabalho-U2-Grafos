@@ -4,19 +4,19 @@ use crate::{
     graphs::{BfsIter, BiconnectedComponentsIter, DfsEdgesIter, DfsIter, DijkstraResult, Edge},
     shortest_path::{BellmanFordResult, FloydWarshallResult, ShortestPathTree},
 };
-use std::{hash::Hash, iter::Sum};
+use std::{fmt::Debug, hash::Hash, iter::Sum};
 
 /// Traço que define um nó de um grafo (orientado ou não).
-pub trait Node: Eq + Hash + Copy {}
+pub trait Node: Eq + Hash + Copy + Debug + Ord {}
 
 /// Implementação do traço Node.
 ///
 /// Aqui, é definido que qualquer tipo [`T`] que implemente os traços
-/// [`Eq`], `Hash` e `Copy` é candidato a ser um Node.
+/// [`Eq`], `Hash`, `Copy`, `Debug` e `Ord` é candidato a ser um Node.
 ///
 /// A princípio, não é possível definir que `String` seja um Node,
 /// pois em Rust este tipo não é capaz de implementar `Copy`, somente `Clone`.
-impl<T> Node for T where T: Eq + Hash + Copy {}
+impl<T> Node for T where T: Eq + Hash + Copy + Debug + Ord {}
 
 /// Traço que define um grafo orientado genérico.
 ///
@@ -26,7 +26,7 @@ impl<T> Node for T where T: Eq + Hash + Copy {}
 ///
 /// # Tipos Genéricos
 /// - `N`: Tipo que representa cada nó de um grafo, implementa `Node`.
-pub trait Graph<N: Node> {
+pub trait Graph<N: Node>: Clone {
     /// Retorna a ordem do grafo, i.e. a quantidade de vértices.
     fn order(&self) -> usize;
 
@@ -60,19 +60,11 @@ pub trait Graph<N: Node> {
     /// já existe, nada deve acontecer.
     fn add_node(&mut self, n: N);
 
-    /// Removes a node and all edges connected to it.
-    ///
-    /// If the node does not exist, this operation has no effect.
-    fn remove_node(&mut self, n: N);
-
     /// Adds a **directed edge** from node `n` to node `m`.
     ///
     /// If either node does not exist, this operation has no effect.
     fn add_edge(&mut self, n: N, m: N);
 
-    /// Removes a **directed edge** from node `n` to node `m`, if it exists.
-    ///
-    /// If either node does not exist, this operation has no effect.
     fn remove_edge(&mut self, n: N, m: N);
 
     type Neighbors<'a>: Iterator<Item = N>
@@ -87,6 +79,10 @@ pub trait Graph<N: Node> {
     /// Verifica se existe uma aresta direcionada do nó `n` ao nó `m`.
     fn has_edge(&self, n: N, m: N) -> bool {
         self.neighbors(n).any(|neighbor| neighbor == m)
+    }
+
+    fn is_directed(&self) -> bool {
+        true
     }
 
     /// Retorna um iterador para uma Busca em Profundidade (DFS) que inicia do nó
@@ -118,14 +114,9 @@ pub trait Graph<N: Node> {
 /// Provides utility methods for manipulation and analysis of undirected graphs,
 /// including connectivity checks, biconnected components, and edge classification.
 pub trait UndirectedGraph<N: Node>: Graph<N> {
-    /// Returns the total number of **undirected edges** in the graph.
-    fn undirected_size(&self) -> usize;
-
-    /// Verifica a conectividade do grafo e retorna um booleano.
-    ///
-    /// A conectividade é checada verificando se há um caminho entre todos os pares de vértices.
-    fn connected(&self) -> bool;
-
+    fn is_directed() -> bool {
+        false
+    }
     fn biconnected_components(&self, start: N) -> BiconnectedComponentsIter<'_, N, Self> {
         BiconnectedComponentsIter::new(self, start)
     }
@@ -138,9 +129,6 @@ pub trait UndirectedGraph<N: Node>: Graph<N> {
         self.add_edge(m, n);
     }
 
-    /// Removes an **undirected edge** `(n <-> m)` from the graph.
-    ///
-    /// Internally, this removes both directed edges `(n <-> m)` and `(m <-> n)`.
     fn remove_undirected_edge(&mut self, n: N, m: N) {
         self.remove_edge(n, m);
         self.remove_edge(m, n);
