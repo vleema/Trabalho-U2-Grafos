@@ -9,7 +9,9 @@ implementações tomadas.
 
 \subsection{Algoritmo de Kruskal}
 
-\begin{lstlisting}[language=Rust, caption={Construtor de Kruskal: KruskalIter::new}]
+\begin{listing}[H]
+	\caption{Construtor do Iterador de Kruskal}
+\begin{minted}{rust}
 pub fn new(graph: &'a G) -> Self {
     let nodes: Vec<T> = graph.nodes().collect();
     let accepted_adj: HashMap<T, HashSet<T>> = HashMap::with_capacity(nodes.len());
@@ -37,9 +39,12 @@ pub fn new(graph: &'a G) -> Self {
         accepted_adj,
     }
 }
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
-\begin{lstlisting}[language=Rust, caption={Iterador de Kruskal: impl Iterator for KruskalIter (next)}]
+\begin{listing}[H]
+	\caption{Iteração de Kruskal}
+\begin{minted}{rust}
 impl<'a, T, G> Iterator for KruskalIter<'a, T, G>
 where
     T: Node + Ord,
@@ -64,7 +69,8 @@ where
         }
     }
 }
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
 A função \texttt{new} prepara previamente todos os dados necessários para a execução incremental do Algoritmo de Kruskal. Ela coleta todas as arestas do grafo, organiza‑as em um vetor e as ordena pelo peso, garantindo que possam ser examinadas da menor para a maior. Também é inicializada a estrutura \texttt{accepted\_adj}, que representa o subgrafo formado apenas pelas arestas já selecionadas na construção da solução.
 
@@ -74,7 +80,9 @@ Ao final das iterações, as arestas acumuladas em \texttt{accepted\_adj} consti
 
 \subsection{Algoritmo de Prim}
 
-\begin{lstlisting}[language=Rust, caption={Construtor de Prim: PrimIter::new}]
+\begin{listing}[H]
+	\caption{Construtor do Iterador de Prim}
+\begin{minted}{rust}
 pub fn new(graph: &'a G) -> Self {
     let nodes: Vec<T> = graph.nodes().collect();
     let mut visited: HashSet<T> = HashSet::with_capacity(nodes.len());
@@ -95,9 +103,12 @@ pub fn new(graph: &'a G) -> Self {
         nodes_len: nodes.len(),
     }
 }
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
-\begin{lstlisting}[language=Rust, caption={Iterador de Prim: impl Iterator for PrimIter (next)}]
+\begin{listing}[H]
+	\caption{Iteração de Prim}
+\begin{minted}{rust}
 impl<'a, T, G> Iterator for PrimIter<'a, T, G>
 where
     T: Node + Ord,
@@ -135,7 +146,8 @@ where
         None
     }
 }
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
 A função \texttt{new()} prepara previamente todos os dados necessários para a execução incremental do Algoritmo de Prim. Inicialmente, escolhe-se um vértice arbitrário como ponto de partida (neste caso, o primeiro retornado por \texttt{graph.nodes()}). Esse vértice é marcado como visitado e todas as suas arestas incidentes são inseridas em um heap mínimo, que servirá como estrutura de prioridade para selecionar sempre a próxima aresta de menor peso que expande a árvore. São também inicializados os conjuntos \texttt{visited} e \texttt{heap}, que representarão, respectivamente, os vértices já incorporados à solução e o conjunto de arestas candidatas que conectam o conjunto visitado ao restante do grafo.
 
