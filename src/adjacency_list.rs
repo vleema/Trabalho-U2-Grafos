@@ -50,44 +50,12 @@ impl<N: Node, W: Weight> Graph<N> for AdjacencyList<N, W> {
         self.0.insert(n, Vec::new());
     }
 
-    fn remove_node(&mut self, _n: N) {
-        todo!()
-        /*
-        if n < self.0.len() {
-            self.0.remove(n);
-            for row in self.0.iter_mut() {
-                for idx in n + 1..row.len() {
-                    row[idx - 1] = row[idx];
-                }
-                row.pop();
-            }
-        }
-        */
-    }
-
-    // No impl Graph<N> para AdjacencyList<N, W>:
-
     fn add_edge(&mut self, n: N, m: N) {
-        if !self.0.contains_key(&n) {
-            self.add_node(n);
+        if self.0.contains_key(&m) {
+            self.0
+                .entry(n)
+                .and_modify(|neighbors| neighbors.push((m, W::one())));
         }
-        if !self.0.contains_key(&m) {
-            self.add_node(m);
-        }
-
-        self.0
-            .entry(n)
-            .and_modify(|neighbors| neighbors.push((m, W::one())));
-    }
-    fn remove_edge(&mut self, _n: N, _m: N) {
-        todo!()
-        /*
-        if let Some(edges) = self.0.get_mut(n)
-            && let Some(edge) = edges.get_mut(m)
-        {
-            *edge = 0;
-        }
-        */
     }
 
     type Neighbors<'a>
@@ -102,135 +70,24 @@ impl<N: Node, W: Weight> Graph<N> for AdjacencyList<N, W> {
             .flat_map(|set| set.iter().map(|(n, _)| *n))
     }
 
-    fn bipartite(&self) -> bool {
-        todo!()
-        /*
-        let n = self.order();
-        if n == 0 {
-            return true;
+    fn remove_edge(&mut self, n: N, m: N) {
+        if self.0.contains_key(&n) {
+            self.0
+                .entry(n)
+                .and_modify(|neighbors| neighbors.retain(|neighbor| neighbor.0 != m));
         }
-
-        let mut side = vec![None; n]; // None = uncolored, Some(0/1) = partition
-        let mut queue = std::collections::VecDeque::new();
-
-        for start in 0..n {
-            // skip already colored components
-            if side[start].is_some() {
-                continue;
-            }
-
-            side[start] = Some(0);
-            queue.push_back(start);
-
-            while let Some(u) = queue.pop_front() {
-                let u_side = side[u].unwrap();
-
-                for (v, &is_edge) in self.0[u].iter().enumerate() {
-                    if is_edge == 0 {
-                        continue;
-                    }
-
-                    if side[v].is_none() {
-                        side[v] = Some(1 - u_side);
-                        queue.push_back(v);
-                    } else if side[v] == Some(u_side) {
-                        return false; // adjacent nodes with same color
-                    }
-                }
-            }
-        }
-
-        true
-        */
-    }
-
-    fn underlying_graph(&self) -> Self {
-        todo!()
-        /*
-        let mut matrix: AdjacencyMatrix =
-            AdjacencyMatrix(vec![vec![0; self.0.len()]; self.0.len()]);
-
-        for (idx_r, row) in self.0.iter().enumerate() {
-            for (idx_c, col) in row.iter().enumerate() {
-                if *col == 1 && !matrix.has_edge(idx_c, idx_r) {
-                    matrix.add_undirected_edge(idx_r, idx_c);
-                }
-            }
-        }
-
-        matrix
-        */
-    }
-    fn is_directed(&self) -> bool {
-        true
     }
 }
 
-impl<N: Node, W: Weight> UndirectedGraph<N> for AdjacencyList<N, W> {
-    fn undirected_size(&self) -> usize {
-        todo!()
-        /*
-        let mut size = 0;
-        for i in 0..self.order() {
-            for j in 0..=i {
-                if self.0[i][j] > 0 {
-                    size += 1;
-                }
-            }
-        }
-        size
-        */
-    }
-
-    fn connected(&self) -> bool {
-        todo!()
-        /*
-        let n = self.order();
-        if n == 0 {
-            return true;
-        }
-
-        let mut visited = vec![false; n];
-        let mut stack = vec![0];
-        visited[0] = true;
-
-        while let Some(u) = stack.pop() {
-            for (v, &is_edge) in self.0[u].iter().enumerate() {
-                if is_edge > 0 && !visited[v] {
-                    visited[v] = true;
-                    stack.push(v);
-                }
-            }
-        }
-
-        visited.into_iter().all(|v| v)
-        */
-    }
-
-    fn undirected_node_degree(&self, _n: N) -> usize {
-        todo!()
-        /*
-        if let Some(row) = self.0.get(node) {
-            row.iter().filter(|&&val| val != 0).count()
-        } else {
-            0
-        }
-        */
-    }
-}
+impl<N: Node, W: Weight> UndirectedGraph<N> for AdjacencyList<N, W> {}
 
 impl<N: Node, W: Weight> WeightedGraph<N, W> for AdjacencyList<N, W> {
     fn add_weighted_edge(&mut self, n: N, m: N, w: W) {
-        if !self.0.contains_key(&n) {
-            self.add_node(n);
+        if self.0.contains_key(&m) {
+            self.0
+                .entry(n)
+                .and_modify(|neighbors| neighbors.push((n, w)));
         }
-        if !self.0.contains_key(&m) {
-            self.add_node(m);
-        }
-
-        self.0
-            .entry(n)
-            .and_modify(|neighbors| neighbors.push((m, w)));
     }
 
     type WeightedNeighbors<'a>

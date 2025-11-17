@@ -1,6 +1,6 @@
 use graphs_algorithms::Graph;
-use graphs_algorithms::eulerian_graph::{UndirectedEulerianGraph, hierholzer};
 use graphs_algorithms::graphs::AdjacencyList;
+use graphs_algorithms::graphs::HierholzerResult;
 
 fn main() {
     demo_eulerian_cycle();
@@ -32,7 +32,7 @@ fn demo_eulerian_cycle() {
     graph.add_edge('E', 'D');
     graph.add_edge('F', 'E');
 
-    let result = hierholzer(&graph);
+    let result = HierholzerResult::new(&graph, true);
 
     println!("Resultado:");
     println!("- Tem ciclo euleriano: {}", result.has_eulerian_cycle);
@@ -62,7 +62,7 @@ fn demo_eulerian_path() {
     println!("GRAFO 2: Caminho Euleriano (Não Direcionado)");
     println!("Vértices: 1, 2, 3, 4, 5, 6, 7");
 
-    let mut graph = UndirectedEulerianGraph::new();
+    let mut graph = AdjacencyList::<char, i32>::new();
 
     graph.add_node('1');
     graph.add_node('2');
@@ -85,7 +85,7 @@ fn demo_eulerian_path() {
     graph.add_edge('5', '7');
     graph.add_edge('6', '7');
 
-    let result = hierholzer(&graph);
+    let result = HierholzerResult::new(&graph, false);
 
     println!("Resultado:");
     println!("- Tem ciclo euleriano: {}", result.has_eulerian_cycle);

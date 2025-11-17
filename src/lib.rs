@@ -17,7 +17,7 @@
 #![feature(impl_trait_in_assoc_type)]
 
 mod adjacency_list;
-pub mod eulerian_graph;
+mod eulerian_graph;
 mod graph;
 mod minimum_spanning_tree;
 mod shortest_path;
@@ -31,6 +31,7 @@ pub use minimum_spanning_tree::{KruskalEvent, PrimEvent};
 
 pub mod graphs {
     pub use crate::adjacency_list::AdjacencyList;
+    pub use crate::eulerian_graph::HierholzerResult;
     pub use crate::shortest_path::BellmanFordResult;
     pub use crate::shortest_path::DijkstraResult;
     pub use crate::traversal::BfsEvent;
@@ -41,5 +42,3 @@ pub mod graphs {
     pub use crate::traversal::DfsIter;
     pub use crate::traversal::Edge;
 }
-
-pub use eulerian_graph::{UndirectedEulerianGraph, hierholzer};
