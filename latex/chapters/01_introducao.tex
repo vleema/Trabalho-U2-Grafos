@@ -1,2 +1,61 @@
 \chapter{Introdução}
 \label{ch:intro}
+
+O presente trabalho tem por objetivo descrever a implementação realizada para a avaliação prática da 2ª Unidade de DIM0549 \- Grafos. A avaliação mencionada consiste em implementar uma API para algoritmos de Grafos que envolvem a geração de uma árvore geradora mínima, a descoberta do caminho mais curto e a detecção de caminhos e ciclos eulerianos. Mais especificamente, serão estas as funções a serem implementadas (de forma obrigatória):
+\begin{enumerate}[label=\alph)*]
+	\item Árvores Geradoras Mínimas
+		\begin{enumerate}
+			\item Algoritmo de Kruskal
+			\item Algoritmo de Prim 
+			\item Algoritmo de Boruvka (Opcional)
+			\item Algoritmo de Chu-Liu/Edmonds (Opcional)
+		\end{enumerate}
+	\item Caminho Mais Curto
+		\begin{enumerate}
+			\item Algoritmo de Dijkstra
+			\item Algoritmo de Bellman-Ford
+			\item Algoritmo de Floyd-Warshall, incluindo a recuperação de caminhos através da árvore de caminhos mais curtos
+		\end{enumerate}
+	\item Grafos Eulerianos
+		\begin{enumerate}
+			\item Algoritmo de Hierholzer para Detecção de Caminhos Eulerianos
+			\item Algoritmo de Hierholzer para Detecção de Ciclos Eulerianos (Opcional)
+		\end{enumerate}
+\end{enumerate}
+
+Dos algoritmos citados, todos os obrigatórios foram implementados, além do Algoritmo de Hierholzer para detectar caminhos eulerianos, que é opcional.
+
+Todos os algoritmos foram implementados utilizando a linguagem de programação Rust.
+
+\section{Traços}
+Assim como no trabalho anterior, nossa implementação se materializa com o apoio dos \emph{traços} de Rust. O uso de traços permite uma implementação genérica e eficiente para a API, de modo que há independência para os algoritmos da estrutura de dados que está sendo utilizada para representar os grafos.
+
+Nesta implementação, existem dois tipos de traços que serão abordados abaixo.
+\subsection{Tipos}
+Temos dois traços que representam tipos genéricos na implementação:
+\begin{enumerate}
+	\item \texttt{Node}: este traço representa todos os tipos que podem ser configurados como vértices de um grafo. Na implementação deste traço, restringimos estes a tipos que implementam os traços \texttt{Eq}, \texttt{Hash}, \texttt{Copy}, \texttt{Debug} e \texttt{Ord}. Na prática, teremos nós que são numéricos ou caracteres; note que não permitimos nós nós \texttt{String} pois em Rust este tipo não implementa \texttt{Copy}.
+	\item \texttt{Weight}: este traço representa os tipos aceitáveis para representar o peso das arestas. A necessidade desse traço se justifica para não tornar fixo o tipo do peso das arestas como \texttt{i32} ou \texttt{usize}. Para a criação desse traço utilizamos um pacote (\texttt{crate}) auxiliar: \texttt{num\_traits}, que provém vários tipos úteis.
+\end{enumerate}
+\subsection{Grafos}
+Temos três traços que representam três tipos de grafos diferentes:
+\begin{enumerate}
+	\item \texttt{Graph}: este traço representa grafos orientados e provém métodos para manipulação destes. É o tipo 'principal' de grafos no nosso trabalho.
+	\item \texttt{UndirectedGraph}: este traço representa grafos não orientados e estende o traço \texttt{Graph}. Esta escolha é interessante para nossa implementação pois todas as operações dos grafos orientados são as mesmas ou compõem as operações de grafos não orientados, enquanto o contrário não necessariamente ocorre.
+	\item \texttt{WeightedGraph}: este traço representa grafos orientados ponderados e armazena os principais algoritmos desenvolvidos. Para representar corretamente, uma nova função de encontrar vizinhos é fornecida e todas as operações com arestas recebem um peso.
+\end{enumerate}
+
+\section{Iteradores vs Loops}
+Para os algoritmos propostos na especificação da API, utilizamos tanto iteradores quanto \textit{loops} tradicionais. Em Rust, iteradores são abstrações de zero custo (\citep{rustbookIteratorPerformance, stackoverflowZerocostAbstractions}), ou seja, não adicionam custo extra em relação à memória, desempenho e instruções em comparação a laços de repetições convencionais. Para os algoritmos que encontram a AGM foram empregados os iteradores, enquanto os que determinam Ciclos/Caminhos Eulerianos e o Caminho Mais Curto utilizam-se de laços convencionais; não há vantagem explícita entre usar um método e outro, a escolha fica a cargo de cada componente.
+
+\section{Organização do relatório}
+
+No capítulo 02, iremos construir um sólido arcabouço teórico para que o leitor seja elucidado acerca dos problemas que os algoritmos têm como alvo. Serão apresentadas desde definições elementares de grafos até definições de Caminho mais Curto e Árvores Geradoras Mínimas.
+
+No capítulo 03, serão apresentados ao leitor os pseudocódigos utilizados como base para a implementação computacional. Estes pseudocódigos são similares aos algoritmos abordados durante a dsiciplina.
+
+No capítulo 04, exibiremos ao leitor todo o código relevante que implementa os algoritmos mencionados no capítulo 03, além de detalhar o funcionamento de trechos difíceis a fim de elucidar a compreensão da implementação.
+
+No capítulo 05, refletiremos sobre a implementação feita e traremos conclusões e possíveis pontos de melhoria.
+
+No apêndice A, é possível conferir a lista completa das atividades desenvolvidas por cada integrante.
