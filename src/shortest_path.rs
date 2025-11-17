@@ -238,9 +238,9 @@ impl<N: Node, W: Weight> FloydWarshallResult<N, W> {
 }
 
 #[derive(PartialEq, Eq, Debug)]
-pub struct ShortestPathTree<N, W> {
-    pub node: N,
-    pub childs: Vec<(W, ShortestPathTree<N, W>)>,
+pub struct ShortestPathTree<Node, Weight> {
+    pub node: Node,
+    pub childs: Vec<(Weight, ShortestPathTree<Node, Weight>)>,
 }
 
 impl<N: Node, W: Weight> ShortestPathTree<N, W> {
@@ -252,10 +252,7 @@ impl<N: Node, W: Weight> ShortestPathTree<N, W> {
             root: N,
         ) {
             for (&k, &w) in &floyd.dist[&tree.node] {
-                if k != tree.node && floyd.pred[&root][&k] == tree.node {
-                    if !visited.insert(k) {
-                        continue;
-                    }
+                if k != tree.node && floyd.pred[&root][&k] == tree.node && visited.insert(k) {
                     let mut new_child = ShortestPathTree {
                         node: k,
                         childs: vec![],
@@ -266,12 +263,12 @@ impl<N: Node, W: Weight> ShortestPathTree<N, W> {
             }
         }
         let floyd = g.floyd_warshall();
+        let mut visited = HashSet::from([root]);
         let mut tree = ShortestPathTree {
             node: root,
             childs: vec![],
         };
-
-        build_tree(&mut HashSet::from([root]), &floyd, &mut tree, root);
+        build_tree(&mut visited, &floyd, &mut tree, root);
 
         tree
     }
