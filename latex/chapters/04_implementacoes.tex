@@ -117,6 +117,88 @@ Isso traz solidez e isolamento para o algoritmo, que é capaz de
 cumprir com eficácia seu objetivo principal sem se preocupar com o
 modo em que as informações serão usadas.
 
+\subsection{Algoritmo de Bellman-Ford}
+Já para a implementação de Bellman-Ford foi elaborado a seguinte \textit{struct}:
+
+\begin{listing}[H]
+  \caption{Estrutura que encapsula o resultado do Algoritmo de Bellman-Ford}
+\begin{minted}{rust}
+pub struct BellmanFordResult<Node, Weight> {
+    pub dist: HashMap<Node, Weight>,
+    pub pred: HashMap<Node, Option<Node>>,
+    pub has_negative_cycle: bool,
+}
+\end{minted}
+\end{listing}
+
+Tal estrutura contém três informações de relevância para a análise do resultado do algoritmo:
+
+\begin{itemize}
+    \item \textbf{dist:} O dicionário que contém a relação de custo acumulado para percorrer o grafo até determinado vértice.
+    \item \textbf{pred:} Dicionário que indica a ordem de precedência do melhor caminho dado um vértice inicial.
+    \item \textbf{has-negative-cycle:} Um booleano correspondente há presença ou não de ciclo negativo no grafo.
+\end{itemize}
+
+E através dessa estrutura, é implementado o método \texttt{new} para na interface correspondente:
+
+\begin{listing}[H]
+  \caption{Interface do algoritmo de Bellman-Ford}
+\begin{minted}{rust}
+impl<N: Node, W: Weight> BellmanFordResult<N, W> {
+    fn new(g: &(impl WeightedGraph<N, W> + ?Sized), start: N) -> Self;
+}
+\end{minted}
+\end{listing}
+
+E segue a implementação do método:
+
+\begin{listing}[H]
+  \caption{Implementação do Algoritmo de Bellman-Ford}
+\begin{minted}{rust}
+    pub fn new(g: &(impl WeightedGraph<N, W> + ?Sized), start: N) -> Self {
+        let mut dist = HashMap::new();
+        let mut pred = HashMap::new();
+
+        for n in g.nodes() {
+            pred.insert(n, None);
+            dist.insert(n, W::max_value());
+        }
+
+        dist.insert(start, W::zero());
+
+        for _i in 1..g.order() {
+            for out_node in g.nodes() {
+                for (in_node, weight) in g.weighted_neighbors(out_node) {
+                    let new_dist = dist[&out_node].saturating_add(&weight);
+
+                    if dist[&in_node] > new_dist {
+                        dist.insert(in_node, new_dist);
+                        pred.insert(in_node, Some(out_node));
+                    }
+                }
+            }
+        }
+
+        let mut has_negative_cycle = false;
+
+        for out_node in g.nodes() {
+            for (in_node, weight) in g.weighted_neighbors(out_node) {
+                if dist[&in_node] > dist[&out_node].saturating_add(&weight) {
+                    has_negative_cycle = true;
+                }
+            }
+        }
+
+        Self {
+            dist,
+            pred,
+            has_negative_cycle,
+        }
+    }
+\end{minted}
+\end{listing}
+
+A execução do Algoritmo de Bellman-Ford se dá através da chamada da função \textit{new}. Nela, dado um grafo e um vértice inicial, o algoritmo é excecutado e tem seu resultado encapsulado através do \textit{BellmanFordResult}.
 \subsection{Algoritmo de Floyd-Warshall}
 
 Para o algoritmo de

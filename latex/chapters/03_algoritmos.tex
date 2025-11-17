@@ -71,6 +71,61 @@ Após o relaxamento, tudo se repete até que todos os vértices estejam
 visitados. Então, ao final das iterações, teremos a menor rota de um
 ponto de origem até todos os demais vértices.
 
+\subsection{Algoritmo de Bellman-Ford}
+\label{sec:pseudocode_bellmanford}
+O algoritmo em questão surgiu durante a segunda metade da década da 50
+através de publicações feitas num período de tempo muito próximo. Seu nome
+homenageia os matemáticos americanos autores dos artigos que o conceberam,
+\cite{bellmanaarticle} e \cite{fordarticle}. Esse se trata de um dos algoritmos
+mais conhecidos dentro da Teoria dos Grafos, especialmente dentro do estudo de
+dos problemas de caminho mínimo, e diferente de \ref{sec:pseudocode_dijkstra}, não
+se trata de um algoritmo guloso. Além de ter a capacidade de lidar com arestas de
+peso negativo e identificar ciclos negativos.
+
+\begin{algorithm}
+  \caption{Algoritmo de Bellman-Ford}
+  \begin{algorithmic}[0]
+    \Require{$G = (V, A, c)$, $v \in V$}
+    \Ensure{Sequência de $v \in V$ ordenados que formam o caminho mais curto}
+    \Statex
+    \Function{Bellman-Ford}{G = (V, A, c), s}
+      \State{$\mathsf{predecessor} \gets []$}
+      \State{$\mathsf{distancia} \gets []$}
+      \For{$v \in V$} \Comment{Inicialização}
+          \State{$\mathsf{predecessor[v]} \gets \emptyset$}
+          \State{$\mathsf{distancia[v]} \gets \infty$}
+      \EndFor
+      \State{$\mathsf{distancia[c]} \gets 0$}
+      \For{$i \in [1,n)$}
+        \For{$(u,v) \in A$} \Comment{Relaxamento de arestas}
+          \If{$\mathsf{distancia[v]} > \mathsf{distancia[u]} + custo(u,v)$}
+            \State{$\mathsf{distancia[v]} \gets \mathsf{distancia[u]} + + custo(u,v)$}
+            \State{$\mathsf{predecessor[v]} \gets u$}
+          \EndIf
+        \EndFor
+      \EndFor
+      \State{$ciclo \gets falso$}
+      \For{$(u,v) \in A$} \Comment{Verifica ciclo negativo}
+        \If{$\mathsf{distancia[v]} > \mathsf{distancia[u]} + custo(u,v)$}
+          \State{$ciclo \gets verdadeiro$}
+        \EndIf
+      \EndFor
+      \State \Return{$(\mathsf{predecessor, distancia, ciclo})$}
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+\FloatBarrier
+
+O algoritmo consiste em três partes: Inicialização, relaxamento de arestas e
+verificação de ciclo negativos. A primeira etapa envolve percorrer todos os
+vértices do grafo a fim de inicializar as variáveis de distância e predecessor.
+A segunda diz respeito ao relaxamento de arestas, ou seja, usar a desigualdade
+triangular para verificar se, dada uma aresta que liga os vértices A e B, é possível
+obter um custo menor de A para B percorrendo um terceiro vértice. E por fim, uma
+vez realizado o relaxamento de arestas, a desigualdade triangular será verificada
+novamente para toda a aresta, pois caso inda seja possível diminuir o custo ao
+percurrer alguma aresta do grafo há um ciclo negativo.
+
 \subsection{Algoritmo de Floyd-Warshall}
 \label{sec:pseudocode_floyd-warshall}
 
