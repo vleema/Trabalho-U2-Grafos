@@ -22,7 +22,7 @@ where
 pub struct KruskalIter<'a, T, G>
 where
     T: Node + Ord,
-    G: UndirectedGraph<T> + WeightedGraph<T, i32>,
+    G: UndirectedGraph<T> + WeightedGraph<T, i32> + ?Sized,
 {
     _graph: &'a G,
     edges: Vec<(T, T, i32)>,
@@ -33,7 +33,7 @@ where
 impl<'a, T, G> KruskalIter<'a, T, G>
 where
     T: Node + Ord,
-    G: UndirectedGraph<T> + WeightedGraph<T, i32>,
+    G: UndirectedGraph<T> + WeightedGraph<T, i32> + ?Sized,
 {
     /// Constrói um iterador que implementa o algoritmo de Kruskal.
     ///
@@ -105,7 +105,7 @@ where
 impl<'a, T, G> Iterator for KruskalIter<'a, T, G>
 where
     T: Node + Ord,
-    G: UndirectedGraph<T> + WeightedGraph<T, i32>,
+    G: UndirectedGraph<T> + WeightedGraph<T, i32> + ?Sized,
 {
     type Item = KruskalEvent<T>;
 
@@ -146,7 +146,7 @@ where
 pub struct PrimIter<'a, T, G>
 where
     T: Node + Ord,
-    G: UndirectedGraph<T> + WeightedGraph<T, i32>,
+    G: UndirectedGraph<T> + WeightedGraph<T, i32> + ?Sized,
 {
     _graph: &'a G,
     visited: HashSet<T>,
@@ -157,7 +157,7 @@ where
 impl<'a, T, G> PrimIter<'a, T, G>
 where
     T: Node + Ord,
-    G: UndirectedGraph<T> + WeightedGraph<T, i32>,
+    G: UndirectedGraph<T> + WeightedGraph<T, i32> + ?Sized,
 {
     /// Constrói um iterador que implementa o algoritmo de Prim.
     ///
@@ -195,7 +195,7 @@ where
 impl<'a, T, G> Iterator for PrimIter<'a, T, G>
 where
     T: Node + Ord,
-    G: UndirectedGraph<T> + WeightedGraph<T, i32>,
+    G: UndirectedGraph<T> + WeightedGraph<T, i32> + ?Sized,
 {
     type Item = PrimEvent<T>;
 

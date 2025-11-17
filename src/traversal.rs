@@ -30,7 +30,7 @@ where
 pub struct DfsIter<'a, N, G>
 where
     N: Node,
-    G: Graph<N>,
+    G: Graph<N> + ?Sized,
     Self: 'a,
 {
     graph: &'a G,
@@ -42,7 +42,7 @@ where
 impl<'a, N, G> DfsIter<'a, N, G>
 where
     N: Node,
-    G: Graph<N>,
+    G: Graph<N> + ?Sized,
 {
     /// Creates a new DFS iterator starting from the given node.
     pub fn new(graph: &'a G, start: N) -> Self {
@@ -66,7 +66,7 @@ where
 impl<'a, N, G> Iterator for DfsIter<'a, N, G>
 where
     N: Node,
-    G: Graph<N>,
+    G: Graph<N> + ?Sized,
 {
     type Item = DfsEvent<N>;
 
@@ -124,7 +124,7 @@ where
 pub struct BfsIter<'a, N, G>
 where
     N: Node,
-    G: Graph<N>,
+    G: Graph<N> + ?Sized,
 {
     graph: &'a G,
     queue: VecDeque<N>,
@@ -135,7 +135,7 @@ where
 impl<'a, N, G> BfsIter<'a, N, G>
 where
     N: Node,
-    G: Graph<N>,
+    G: Graph<N> + ?Sized,
 {
     /// Creates a new BFS iterator starting from the given node.
     pub fn new(graph: &'a G, start: N) -> Self {
@@ -157,7 +157,7 @@ where
 impl<'a, N, G> Iterator for BfsIter<'a, N, G>
 where
     N: Node,
-    G: Graph<N>,
+    G: Graph<N> + ?Sized,
 {
     type Item = Vec<BfsEvent<N>>;
 
@@ -214,7 +214,7 @@ where
 pub struct DfsEdgesIter<'a, N, G>
 where
     N: Node,
-    G: Graph<N>,
+    G: Graph<N> + ?Sized,
     Self: 'a,
 {
     iter: DfsIter<'a, N, G>,
@@ -228,7 +228,7 @@ where
 impl<'a, N, G> DfsEdgesIter<'a, N, G>
 where
     N: Node,
-    G: Graph<N>,
+    G: Graph<N> + ?Sized,
 {
     /// Creates a new DFS-with-edges iterator starting from the given node.
     pub fn new(graph: &'a G, start: N) -> Self {
@@ -253,7 +253,7 @@ where
 impl<'a, N, G> Iterator for DfsEdgesIter<'a, N, G>
 where
     N: Node,
-    G: Graph<N>,
+    G: Graph<N> + ?Sized,
 {
     type Item = Edge<N>;
 
@@ -308,7 +308,7 @@ where
 pub struct BiconnectedComponentsIter<'a, T, G>
 where
     T: Node,
-    G: Graph<T>,
+    G: Graph<T> + ?Sized,
     Self: 'a,
 {
     iter: DfsIter<'a, T, G>,
@@ -322,7 +322,7 @@ where
 impl<'a, N, G> BiconnectedComponentsIter<'a, N, G>
 where
     N: Node,
-    G: Graph<N> + 'a,
+    G: Graph<N> + 'a + ?Sized,
 {
     /// Creates a new iterator over the biconnected components of an undirected graph
     pub fn new(graph: &'a G, start: N) -> Self {
@@ -352,7 +352,7 @@ where
 impl<'a, N, G> Iterator for BiconnectedComponentsIter<'a, N, G>
 where
     N: Node,
-    G: Graph<N>,
+    G: Graph<N> + ?Sized,
 {
     type Item = Vec<(N, N)>;
 

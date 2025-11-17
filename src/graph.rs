@@ -26,7 +26,7 @@ impl<T> Node for T where T: Eq + Hash + Copy + Debug + Ord {}
 ///
 /// # Tipos Genéricos
 /// - `N`: Tipo que representa cada nó de um grafo, implementa `Node`.
-pub trait Graph<N: Node>: Clone {
+pub trait Graph<N: Node> {
     /// Retorna a ordem do grafo, i.e. a quantidade de vértices.
     fn order(&self) -> usize;
 

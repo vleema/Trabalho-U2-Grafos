@@ -9,7 +9,7 @@ pub struct HierholzerResult<Node> {
 }
 
 impl<N: Node> HierholzerResult<N> {
-    pub fn new<G: UndirectedGraph<N>>(graph: &G, is_directed: bool) -> Self {
+    pub fn new<G: UndirectedGraph<N> + Clone>(graph: &G, is_directed: bool) -> Self {
         let mut out_degree = HashMap::new();
         let mut in_degree = HashMap::new();
         Self::compute_every_node_degree(graph, &mut out_degree, &mut in_degree);
