@@ -247,6 +247,14 @@ pub trait WeightedGraph<N: Node, W: Weight>: Graph<N> {
         FloydWarshallResult::new(self)
     }
 
+    /// Gera uma árvore de caminhos mínimos que parte do vértice `root`.
+    ///
+    /// # Argumentos
+    /// - `root`: vértice origem da busca.
+    ///
+    /// # Retorno
+    /// Uma `ShortestPathTree` contendo as distâncias e predecessores mínimos
+    /// para alcançar cada vértice alcançável a partir de `root`.
     fn shortest_path_tree(&self, root: N) -> ShortestPathTree<N, W> {
         ShortestPathTree::new(self, root)
     }
