@@ -44,7 +44,7 @@ where
     /// * Coleta as arestas do grafo e canonicaliza cada aresta para evitar duplicatas;
     /// * Ordena as arestas por peso crescente e armazena em `edges`;
     /// * Inicializa o grafo parcial `accepted_adj` (vazio) e o índice de leitura `idx`;
-    /// * O método `next()` varre `edges` em ordem; para cada aresta testará se a sua inclusão
+    /// * O método `next()` varre `arestas` em ordem; para cada aresta testará se a sua inclusão
     ///   cria ciclo usando `connected_by_accepted`; emite eventos [`KruskalEvent::EdgeAdded`]
     ///   ou [`KruskalEvent::EdgeSkipped`] conforme o caso.
     pub fn new(graph: &'a G) -> Self {
