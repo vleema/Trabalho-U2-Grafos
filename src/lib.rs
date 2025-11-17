@@ -34,6 +34,8 @@ pub mod graphs {
     pub use crate::eulerian_graph::HierholzerResult;
     pub use crate::shortest_path::BellmanFordResult;
     pub use crate::shortest_path::DijkstraResult;
+    pub use crate::shortest_path::FloydWarshallResult;
+    pub use crate::shortest_path::ShortestPathTree;
     pub use crate::traversal::BfsEvent;
     pub use crate::traversal::BfsIter;
     pub use crate::traversal::BiconnectedComponentsIter;

@@ -237,10 +237,10 @@ impl<N: Node, W: Weight> FloydWarshallResult<N, W> {
     }
 }
 
-#[derive(PartialEq, Eq, Debug)]
-pub struct ShortestPathTree<Node, Weight> {
-    pub node: Node,
-    pub childs: Vec<(Weight, ShortestPathTree<Node, Weight>)>,
+#[derive(PartialEq, Eq, Debug, Clone)]
+pub struct ShortestPathTree<N, W> {
+    pub node: N,
+    pub childs: Vec<(W, ShortestPathTree<N, W>)>,
 }
 
 impl<N: Node, W: Weight> ShortestPathTree<N, W> {
