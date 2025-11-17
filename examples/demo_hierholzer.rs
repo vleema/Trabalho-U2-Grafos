@@ -1,4 +1,4 @@
-use graphs_algorithms::Graph;
+use graphs_algorithms::{Graph, UndirectedGraph};
 use graphs_algorithms::graphs::AdjacencyList;
 use graphs_algorithms::graphs::HierholzerResult;
 
@@ -72,18 +72,18 @@ fn demo_eulerian_path() {
     graph.add_node('6');
     graph.add_node('7');
 
-    graph.add_edge('1', '2');
-    graph.add_edge('1', '3');
-    graph.add_edge('2', '3');
-    graph.add_edge('2', '4');
-    graph.add_edge('2', '5');
-    graph.add_edge('3', '4');
-    graph.add_edge('3', '6');
-    graph.add_edge('4', '5');
-    graph.add_edge('4', '6');
-    graph.add_edge('5', '6');
-    graph.add_edge('5', '7');
-    graph.add_edge('6', '7');
+    graph.add_undirected_edge('1', '2');
+    graph.add_undirected_edge('1', '3');
+    graph.add_undirected_edge('2', '3');
+    graph.add_undirected_edge('2', '4');
+    graph.add_undirected_edge('2', '5');
+    graph.add_undirected_edge('3', '4');
+    graph.add_undirected_edge('3', '6');
+    graph.add_undirected_edge('4', '5');
+    graph.add_undirected_edge('4', '6');
+    graph.add_undirected_edge('5', '6');
+    graph.add_undirected_edge('5', '7');
+    graph.add_undirected_edge('6', '7');
 
     let result = HierholzerResult::new(&graph, false);
 
