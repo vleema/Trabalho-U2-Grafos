@@ -1,6 +1,6 @@
-use graphs_algorithms::{Graph, UndirectedGraph};
 use graphs_algorithms::graphs::AdjacencyList;
 use graphs_algorithms::graphs::HierholzerResult;
+use graphs_algorithms::{Graph, UndirectedGraph};
 
 fn main() {
     demo_eulerian_cycle();
