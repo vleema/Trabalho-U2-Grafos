@@ -2,18 +2,6 @@ use crate::graph::Graph;
 use crate::graph::Node;
 use std::collections::{HashMap, HashSet, VecDeque};
 
-/// Represents an event that occurs during a depth-first search (DFS) traversal.
-///
-/// This enum is used to describe the different types of events that can be
-/// encountered while performing DFS on a graph. It is generic over the `Node`
-/// type, which represents the nodes in the graph.
-///
-/// # Variants
-/// - `Discover(Node, Option<Node>)`: Indicates that a node has been discovered for the first time.
-///   The `Option<Node>` represents the parent node in the DFS tree (`None` for the start node).
-/// - `Finish(Node)`: Indicates that all descendants of a node have been visited and the node is finished.
-/// - `NonTreeEdge(Node, Node)`: Indicates that a non-tree edge (back, forward, or cross edge) is found
-///   from the first node to the second node.
 #[derive(Debug)]
 pub enum DfsEvent<T>
 where
@@ -24,9 +12,6 @@ where
     NonTreeEdge(T, T),
 }
 
-/// Represents a iterator over a depth-first-search (DFS) traversal.
-///
-/// The iteration yields a `DfsEvent<Node>` over each instance of `next`.
 pub struct DfsIter<'a, N, G>
 where
     N: Node,
@@ -44,7 +29,6 @@ where
     N: Node,
     G: Graph<N> + ?Sized,
 {
-    /// Creates a new DFS iterator starting from the given node.
     pub fn new(graph: &'a G, start: N) -> Self {
         Self {
             graph,
@@ -54,10 +38,6 @@ where
         }
     }
 
-    /// Sets the `start_node` field of a `DfsIter` manually.
-    ///
-    /// This enables starting another DFS while maintains the inner parts of the iterator
-    /// initialized, like the `visited` dictionary.
     pub fn new_start(&mut self, start: N) {
         self.start_node = Some(start)
     }
@@ -99,16 +79,6 @@ where
     }
 }
 
-/// Represents an event during a breadth-first search (BFS).
-///
-/// This enum is used to describe the different types of events that can be
-/// encountered while performing DFS on a graph. It is generic over the `Node`
-/// type, which represents the nodes in the graph.
-///
-/// # Variants
-/// - `Discover(Node, Vec<Node>)`: Indicates that a node has been discovered for the first time.
-///   The `Vec<Node>` represents the node's neighbors that will be explored on BFS tree.
-/// - `CrossEdge(Node, Node)`: Indicates that a node has an edge to another and neither is an ancestor of the other.
 #[derive(Debug)]
 pub enum BfsEvent<N>
 where
@@ -118,9 +88,6 @@ where
     CrossEdge(N, N),
 }
 
-/// Represents a iterator over a breadth-first-search (BFS) traversal.
-///
-/// The iteration yields a `BfsEvent<Node>` over each instance of `next`.
 pub struct BfsIter<'a, N, G>
 where
     N: Node,
@@ -137,7 +104,6 @@ where
     N: Node,
     G: Graph<N> + ?Sized,
 {
-    /// Creates a new BFS iterator starting from the given node.
     pub fn new(graph: &'a G, start: N) -> Self {
         let mut visited = HashSet::with_capacity(graph.order());
         visited.insert(start);
@@ -181,19 +147,6 @@ where
     }
 }
 
-/// Represents the classification of an edge in a graph during a depth-first search (DFS).
-///
-/// This enum is used to categorize edges based on the DFS traversal. It is generic
-/// over the `Node` type, which represents the nodes in the graph. The classification
-/// is based on the relationship between the two nodes connected by the edge in the DFS tree.
-///
-/// # Variants
-/// - `Tree(u, v)`: An edge from a parent `u` to a child `v` in the DFS tree.
-/// - `Back(u, v)`: An edge from a node `u` to its ancestor `v` in the DFS tree. This indicates a cycle.
-/// - `ParentBack(u, v)`: A special case of a back edge where `v` is the direct parent of `u`.
-///   This is common in undirected graphs.
-/// - `Forward(u, v)`: An edge from a node `u` to its descendant `v` that is not a tree edge.
-/// - `Cross(u, v)`: An edge between two nodes `u` and `v` such that neither is an ancestor of the other.
 #[derive(Debug)]
 pub enum Edge<N>
 where
@@ -206,11 +159,6 @@ where
     Cross(N, N),
 }
 
-/// An iterator that performs a depth-first search (DFS) and classifies the edges of the graph.
-///
-/// This iterator wraps a `DfsIter` and uses its events to classify each edge of the
-/// graph into one of the categories defined by the `Edge` enum. It yields an `Edge<Node>`
-/// for each edge encountered during the traversal.
 pub struct DfsEdgesIter<'a, N, G>
 where
     N: Node,
@@ -230,7 +178,6 @@ where
     N: Node,
     G: Graph<N> + ?Sized,
 {
-    /// Creates a new DFS-with-edges iterator starting from the given node.
     pub fn new(graph: &'a G, start: N) -> Self {
         Self {
             iter: DfsIter::new(graph, start),
@@ -242,9 +189,6 @@ where
         }
     }
 
-    /// Sets the `start_node` field of the inner `DfsIter` manually.
-    ///
-    /// This enables classifying edges from another components of a graph.
     pub fn new_start(&mut self, start: N) {
         self.iter.new_start(start);
     }
@@ -301,10 +245,6 @@ where
     }
 }
 
-/// An iterator that yields the biconnected components of a undirected graph (`UndirectedGraph`).
-///
-/// The iterator identifies the biconnected components during a depth-first-search (DFS) that's
-/// made by a inner iterator, a `DfsIter`.
 pub struct BiconnectedComponentsIter<'a, T, G>
 where
     T: Node,
@@ -324,7 +264,6 @@ where
     N: Node,
     G: Graph<N> + 'a + ?Sized,
 {
-    /// Creates a new iterator over the biconnected components of an undirected graph
     pub fn new(graph: &'a G, start: N) -> Self {
         Self {
             iter: graph.dfs(start),
@@ -336,7 +275,6 @@ where
         }
     }
 
-    /// Extracts a biconnected component from the edge stack.
     fn extract_component(&mut self, u: N, v: N) -> Option<Vec<(N, N)>> {
         let mut component = Vec::new();
         while let Some(edge) = self.edge_stack.pop() {
@@ -394,92 +332,4 @@ where
         }
         None
     }
-}
-
-#[cfg(test)]
-mod test {
-    /* Uncomment when is implemented
-    use super::*;
-    use crate::UndirectedGraph;
-    use crate::adjacency_matrix::AdjacencyMatrix;
-
-    #[test]
-    fn dfs_with_cycle() {
-        let mut g = AdjacencyMatrix::default();
-        g.add_node(0);
-        g.add_node(1);
-        g.add_node(2);
-        g.add_edge(0, 1);
-        g.add_edge(1, 2);
-        g.add_edge(2, 0); // Cycle
-
-        let mut dfs = g.dfs(0);
-
-        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(0, None))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(1, Some(0)))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(2, Some(1)))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::NonTreeEdge(2, 0))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(2))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(1))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(0))));
-        assert!(dfs.next().is_none());
-    }
-
-    #[test]
-    fn dfs_simple_path() {
-        let mut g = AdjacencyMatrix::default();
-        g.add_node(0);
-        g.add_node(1);
-        g.add_node(2);
-        g.add_edge(0, 1);
-        g.add_edge(1, 2);
-
-        let mut dfs = g.dfs(0);
-
-        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(0, None))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(1, Some(0)))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(2, Some(1)))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(2))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(1))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(0))));
-        assert!(dfs.next().is_none());
-    }
-
-    #[test]
-    fn single_node_dfs() {
-        let mut g = AdjacencyMatrix::default();
-        g.add_node(0);
-
-        let mut dfs = g.dfs(0);
-
-        assert!(matches!(dfs.next(), Some(DfsEvent::Discover(0, None))));
-        assert!(matches!(dfs.next(), Some(DfsEvent::Finish(0))));
-        assert!(dfs.next().is_none());
-    }
-
-    #[test]
-    fn test_biconnected_components() {
-        // 0 -- 1 -- 4
-        //    /  \
-        //   3 -- 2
-        let mut graph = AdjacencyMatrix::default();
-        graph.add_node(0);
-        graph.add_node(1);
-        graph.add_node(2);
-        graph.add_node(3);
-        graph.add_node(4);
-        graph.add_undirected_edge(1, 4);
-        graph.add_undirected_edge(0, 1);
-        graph.add_undirected_edge(1, 2);
-        graph.add_undirected_edge(1, 3);
-        graph.add_undirected_edge(2, 3);
-
-        let components: Vec<Vec<(usize, usize)>> = graph.biconnected_components(0).collect();
-
-        assert_eq!(components.len(), 3);
-        assert!(components.contains(&vec![(1, 4)]));
-        assert!(components.contains(&vec![(3, 1), (2, 3), (1, 2)]));
-        assert!(components.contains(&vec![(0, 1)]));
-    }
-    */
 }
