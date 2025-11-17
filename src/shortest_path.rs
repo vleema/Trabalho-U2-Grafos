@@ -189,6 +189,14 @@ pub struct FloydWarshallResult<Node, Weight> {
 }
 
 impl<N: Node, W: Weight> FloydWarshallResult<N, W> {
+    /// Executa o algoritmo de Floyd-Warshall e retorna um [`FloydWarshallResult`].
+    ///
+    /// # Argumentos
+    /// - `g`: grafo ponderado cujos vértices e pesos serão analisados.
+    ///
+    /// # Retorno
+    /// - Um [`FloydWarshallResult`] contendo as matrizes de distância e predecessores
+    ///   para todos os pares de vértices alcançáveis do grafo.
     pub fn new(g: &(impl WeightedGraph<N, W> + ?Sized)) -> Self {
         let mut dist = HashMap::with_capacity(g.order());
         let mut pred = HashMap::with_capacity(g.order());
@@ -238,12 +246,21 @@ impl<N: Node, W: Weight> FloydWarshallResult<N, W> {
 }
 
 #[derive(PartialEq, Eq, Debug, Clone)]
-pub struct ShortestPathTree<N, W> {
-    pub node: N,
-    pub childs: Vec<(W, ShortestPathTree<N, W>)>,
+pub struct ShortestPathTree<Node, Weight> {
+    pub node: Node,
+    pub childs: Vec<(Weight, ShortestPathTree<Node, Weight>)>,
 }
 
 impl<N: Node, W: Weight> ShortestPathTree<N, W> {
+    /// Constrói a árvore de caminhos mínimos a partir do vértice `root`.
+    ///
+    /// # Argumentos
+    /// - `g`: grafo ponderado utilizado como fonte das distâncias.
+    /// - `root`: vértice de origem cujos caminhos mínimos serão expandidos.
+    ///
+    /// # Retorno
+    /// Uma [`ShortestPathTree`] que organiza os vértices alcançáveis a partir de `root`
+    /// em uma estrutura hierárquica, junto dos pesos acumulados das menores rotas.
     pub fn new(g: &(impl WeightedGraph<N, W> + ?Sized), root: N) -> Self {
         fn build_tree<N: Node, W: Weight>(
             visited: &mut HashSet<N>,
@@ -386,7 +403,7 @@ mod test {
         assert_eq!(pred[&'E'], Some('F')); // A -> F -> E
         assert_eq!(pred[&'F'], Some('A')); // A -> F
 
-        assert_eq!(has_negative_cycle, false);
+        assert!(!has_negative_cycle);
     }
 
     #[test]
