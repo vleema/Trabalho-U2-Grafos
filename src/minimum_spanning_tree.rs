@@ -4,7 +4,8 @@ use std::collections::{HashMap, HashSet};
 
 use crate::graph::{Node, UndirectedGraph, WeightedGraph};
 
-/// Eventos do iterador de Kruskal (tuplas para compatibilidade com outros eventos).
+/// Enum que representa eventos gerados durante a execução de Kruskal.
+/// Cada variante carrega uma tupla (u, v, peso).
 #[derive(Debug)]
 pub enum KruskalEvent<T>
 where
@@ -15,10 +16,9 @@ where
     EdgeSkipped((T, T, i32)),
 }
 
-/// Iterador passo-a-passo do algoritmo de Kruskal.
-/// - coletaarestas em H
-/// - ordena H por peso
-/// - percorre H, aceitando uma aresta se permanece acíclico
+/// O Struct KruskalIter implementa um iterador passo-a-passo do algoritmo de Kruskal.
+/// Mantém referência ao grafo, vetor de arestas ordenadas, índice corrente e um grafo
+/// parcial (`accepted_adj`) usado para detectar ciclos.
 pub struct KruskalIter<'a, T, G>
 where
     T: Node + Ord,
@@ -27,7 +27,6 @@ where
     _graph: &'a G,
     edges: Vec<(T, T, i32)>,
     idx: usize,
-    // grafo parcial das arestas já aceitas (usado apenas para detectar ciclos)
     accepted_adj: HashMap<T, HashSet<T>>,
 }
 
@@ -36,11 +35,22 @@ where
     T: Node + Ord,
     G: UndirectedGraph<T> + WeightedGraph<T, i32> + ?Sized,
 {
+    /// Constrói um iterador que implementa o algoritmo de Kruskal.
+    ///
+    /// ## Argumentos
+    /// * `graph`: um tipo que implementa os traços [`UndirectedGraph`] e [`WeightedGraph`]
+    ///
+    /// ## Fluxo
+    /// * Coleta as arestas do grafo e canonicaliza cada aresta para evitar duplicatas;
+    /// * Ordena as arestas por peso crescente e armazena em `edges`;
+    /// * Inicializa o grafo parcial `accepted_adj` (vazio) e o índice de leitura `idx`;
+    /// * O método `next()` varre `edges` em ordem; para cada aresta testará se a sua inclusão
+    ///   cria ciclo usando `connected_by_accepted`; emite eventos [`KruskalEvent::EdgeAdded`]
+    ///   ou [`KruskalEvent::EdgeSkipped`] conforme o caso.
     pub fn new(graph: &'a G) -> Self {
         let nodes: Vec<T> = graph.nodes().collect();
         let accepted_adj: HashMap<T, HashSet<T>> = HashMap::with_capacity(nodes.len());
 
-        // coleta arestas sem duplicatas (canonicalizando por par (min,max))
         let mut seen: HashSet<(T, T)> = HashSet::with_capacity(nodes.len() * 2);
         let mut edges: Vec<(T, T, i32)> = Vec::new();
 
@@ -53,7 +63,6 @@ where
             }
         }
 
-        // ordena por peso, tie-break por (u, v)
         edges.sort_by(|(ua, va, wa), (ub, vb, wb)| {
             wa.cmp(wb).then_with(|| ua.cmp(ub)).then_with(|| va.cmp(vb))
         });
@@ -66,8 +75,8 @@ where
         }
     }
 
-    // detecta se existe caminho entre `a` e `b` no grafo parcial `accepted_adj` (DFS iterativa).
-    // Usado para decidir se T ∪ {(a,b)} criaria ciclo.
+    /// Verifica se existe um caminho no grafo parcial `accepted_adj` entre `a` e `b`.
+    /// Usada para decidir se a inclusão da aresta (a,b) criaria um ciclo.
     fn connected_by_accepted(&self, a: T, b: T) -> bool {
         if a == b {
             return true;
@@ -100,6 +109,8 @@ where
 {
     type Item = KruskalEvent<T>;
 
+    /// Avança para a próxima aresta ordenada e retorna um evento indicando
+    /// se a aresta foi aceita (`EdgeAdded`) ou descartada (`EdgeSkipped`).
     fn next(&mut self) -> Option<Self::Item> {
         if self.idx < self.edges.len() {
             let (u, v, w) = self.edges[self.idx];
@@ -118,7 +129,8 @@ where
     }
 }
 
-/// Eventos do iterador de Prim.
+/// Enum que representa eventos do iterador de Prim.
+/// Cada variante carrega os campos (u, v, peso).
 #[derive(Debug)]
 pub enum PrimEvent<T>
 where
@@ -128,9 +140,9 @@ where
     EdgeSkipped(T, T, i32),
 }
 
-/// Iterador passo-a-passo do algoritmo de Prim.
-/// - inicia em um vértice s (o primeiro em graph.nodes())
-/// - mantém Z = visited e um heap com arestas candidatas entre Z e N
+/// O Struct PrimIter implementa um iterador passo-a-passo do algoritmo de Prim.
+/// Mantém referência ao grafo, conjunto de vértices visitados, um heap de arestas
+/// candidatas e o número total de nós.
 pub struct PrimIter<'a, T, G>
 where
     T: Node + Ord,
@@ -147,6 +159,17 @@ where
     T: Node + Ord,
     G: UndirectedGraph<T> + WeightedGraph<T, i32> + ?Sized,
 {
+    /// Constrói um iterador que implementa o algoritmo de Prim.
+    ///
+    /// ## Argumentos
+    /// * `graph`: um tipo que implementa os traços [`UndirectedGraph`] e [`WeightedGraph`]
+    ///
+    /// ## Fluxo
+    /// * Escolhe um vértice inicial (o primeiro de `graph.nodes()`);
+    /// * Insere o vértice inicial em `visited` e popula o `heap` com as arestas incidentes a ele;
+    /// * A cada chamada de `next()` extrai do `heap` a aresta de menor peso; se exatamente um
+    ///   extremo estiver em `visited` a aresta é aceita e o novo vértice é incorporado, adicionando
+    ///   suas arestas ao `heap`; caso contrário a aresta é descartada;
     pub fn new(graph: &'a G) -> Self {
         let nodes: Vec<T> = graph.nodes().collect();
         let mut visited: HashSet<T> = HashSet::with_capacity(nodes.len());
@@ -176,8 +199,10 @@ where
 {
     type Item = PrimEvent<T>;
 
+    /// Extrai a próxima aresta candidata do heap e decide aceitá-la ou descartá-la.
+    /// Retorna `EdgeAdded` quando a aresta conecta Z a V\\Z e o novo vértice é incorporado,
+    /// ou `EdgeSkipped` quando a aresta não contribui para expandir Z.
     fn next(&mut self) -> Option<Self::Item> {
-        // fim quando todos os vértices forem incorporados (assume grafo conexo)
         if self.visited.len() >= self.nodes_len {
             return None;
         }
@@ -186,12 +211,10 @@ where
             let u_vis = self.visited.contains(&u);
             let v_vis = self.visited.contains(&v);
 
-            // ambas em Z -> descarta (criaria ciclo)
             if u_vis && v_vis {
                 return Some(PrimEvent::EdgeSkipped(u, v, w));
             }
 
-            // exatamente um em Z -> aceita e incorpora o novo vértice
             if u_vis ^ v_vis {
                 let new = if u_vis { v } else { u };
                 let (a_out, b_out) = if u <= v { (u, v) } else { (v, u) };
@@ -203,12 +226,9 @@ where
                 return Some(PrimEvent::EdgeAdded(a_out, b_out, w));
             }
 
-            // nenhum extremo em Z (estado transitório) -> ignorar
             continue;
         }
 
-        // Se o heap esvaziar antes de visitar todos os nós, isso indica que o grafo
-        // não é conexo — então encerramos.
         None
     }
 }
@@ -261,7 +281,6 @@ mod tests {
             }
         }
 
-        // 10 vértices -> 9 arestas na MST
         assert_eq!(added.len(), 9);
 
         let total_weight: i32 = added.iter().map(|(_, _, w)| *w).sum();
