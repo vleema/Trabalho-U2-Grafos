@@ -7,6 +7,142 @@ implementações tomadas.
 
 \section{Algoritmos de Árvore Geradora Mínima}
 
+\subsection{Algoritmo de Kruskal}
+
+\begin{lstlisting}[language=Rust, caption={Construtor de Kruskal: KruskalIter::new}]
+pub fn new(graph: &'a G) -> Self {
+    let nodes: Vec<T> = graph.nodes().collect();
+    let accepted_adj: HashMap<T, HashSet<T>> = HashMap::with_capacity(nodes.len());
+
+    let mut seen: HashSet<(T, T)> = HashSet::with_capacity(nodes.len() * 2);
+    let mut edges: Vec<(T, T, i32)> = Vec::new();
+
+    for &u in &nodes {
+        for (v, w) in graph.weighted_neighbors(u) {
+            let (a, b) = if u <= v { (u, v) } else { (v, u) };
+            if seen.insert((a, b)) {
+                edges.push((a, b, w));
+            }
+        }
+    }
+
+    edges.sort_by(|(ua, va, wa), (ub, vb, wb)| {
+        wa.cmp(wb).then_with(|| ua.cmp(ub)).then_with(|| va.cmp(vb))
+    });
+
+    KruskalIter {
+        _graph: graph,
+        edges,
+        idx: 0,
+        accepted_adj,
+    }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=Rust, caption={Iterador de Kruskal: impl Iterator for KruskalIter (next)}]
+impl<'a, T, G> Iterator for KruskalIter<'a, T, G>
+where
+    T: Node + Ord,
+    G: UndirectedGraph<T> + WeightedGraph<T, i32> + ?Sized,
+{
+    type Item = KruskalEvent<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.idx < self.edges.len() {
+            let (u, v, w) = self.edges[self.idx];
+            self.idx += 1;
+
+            if !self.connected_by_accepted(u, v) {
+                self.accepted_adj.entry(u).or_default().insert(v);
+                self.accepted_adj.entry(v).or_default().insert(u);
+                Some(KruskalEvent::EdgeAdded((u, v, w)))
+            } else {
+                Some(KruskalEvent::EdgeSkipped((u, v, w)))
+            }
+        } else {
+            None
+        }
+    }
+}
+\end{lstlisting}
+
+A função \texttt{new} prepara previamente todos os dados necessários para a execução incremental do Algoritmo de Kruskal. Ela coleta todas as arestas do grafo, organiza‑as em um vetor e as ordena pelo peso, garantindo que possam ser examinadas da menor para a maior. Também é inicializada a estrutura \texttt{accepted\_adj}, que representa o subgrafo formado apenas pelas arestas já selecionadas na construção da solução.
+
+A lógica do algoritmo é realizada de forma incremental no método \texttt{next()}. A cada chamada, o iterador processa a próxima aresta da lista ordenada. Para decidir se ela deve ser incluída na árvore geradora, o método verifica se seus vértices já estão conectados no subgrafo parcial armazenado em \texttt{accepted\_adj}. Caso ainda estejam conectados, isto é, caso a inclusão da aresta não forme um ciclo, a aresta é incorporada à solução e registrada na estrutura \texttt{accepted\_adj}. 
+
+Ao final das iterações, as arestas acumuladas em \texttt{accepted\_adj} constituem o resultado do algoritmo.
+
+\subsection{Algoritmo de Prim}
+
+\begin{lstlisting}[language=Rust, caption={Construtor de Prim: PrimIter::new}]
+pub fn new(graph: &'a G) -> Self {
+    let nodes: Vec<T> = graph.nodes().collect();
+    let mut visited: HashSet<T> = HashSet::with_capacity(nodes.len());
+    let mut heap = BinaryHeap::new();
+
+    if let Some(&s) = nodes.first() {
+        visited.insert(s);
+        for (v, w) in graph.weighted_neighbors(s) {
+            let (a, b) = if s <= v { (s, v) } else { (v, s) };
+            heap.push(Reverse((w, a, b)));
+        }
+    }
+
+    PrimIter {
+        _graph: graph,
+        visited,
+        heap,
+        nodes_len: nodes.len(),
+    }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=Rust, caption={Iterador de Prim: impl Iterator for PrimIter (next)}]
+impl<'a, T, G> Iterator for PrimIter<'a, T, G>
+where
+    T: Node + Ord,
+    G: UndirectedGraph<T> + WeightedGraph<T, i32> + ?Sized,
+{
+    type Item = PrimEvent<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.visited.len() >= self.nodes_len {
+            return None;
+        }
+
+        while let Some(Reverse((w, u, v))) = self.heap.pop() {
+            let u_vis = self.visited.contains(&u);
+            let v_vis = self.visited.contains(&v);
+
+            if u_vis && v_vis {
+                return Some(PrimEvent::EdgeSkipped(u, v, w));
+            }
+
+            if u_vis ^ v_vis {
+                let new = if u_vis { v } else { u };
+                let (a_out, b_out) = if u <= v { (u, v) } else { (v, u) };
+                self.visited.insert(new);
+                for (nv, w2) in self._graph.weighted_neighbors(new) {
+                    let (aa, bb) = if new <= nv { (new, nv) } else { (nv, new) };
+                    self.heap.push(Reverse((w2, aa, bb)));
+                }
+                return Some(PrimEvent::EdgeAdded(a_out, b_out, w));
+            }
+
+            continue;
+        }
+
+        None
+    }
+}
+\end{lstlisting}
+
+A função \texttt{new()} prepara previamente todos os dados necessários para a execução incremental do Algoritmo de Prim. Inicialmente, escolhe-se um vértice arbitrário como ponto de partida (neste caso, o primeiro retornado por \texttt{graph.nodes()}). Esse vértice é marcado como visitado e todas as suas arestas incidentes são inseridas em um heap mínimo, que servirá como estrutura de prioridade para selecionar sempre a próxima aresta de menor peso que expande a árvore. São também inicializados os conjuntos \texttt{visited} e \texttt{heap}, que representarão, respectivamente, os vértices já incorporados à solução e o conjunto de arestas candidatas que conectam o conjunto visitado ao restante do grafo.
+
+A lógica do algoritmo é realizada de forma incremental no método \texttt{next()}. A cada chamada, o iterador remove do heap a aresta de menor peso disponível. Se essa aresta conecta um vértice já visitado a um ainda não visitado, então ela é aceita na árvore geradora mínima. O vértice recém‑incluído é adicionado a \texttt{visited}, e todas as suas arestas são inseridas no heap, permitindo que novas expansões sejam consideradas. Caso contrário, se a aresta conecta dois vértices já visitados, ela é descartada, pois sua inclusão criaria um ciclo.
+
+Ao final das iterações, quando todos os vértices tiverem sido incorporados ao conjunto \texttt{visited}, o método \texttt{next()} deixa de produzir eventos e a execução se encerra. As arestas aceitas ao longo do processo formam a árvore geradora mínima do grafo.
+
 \section{Algoritmos de Caminho Mais Curto}
 
 \subsection{Algoritmo de Dijkstra}
