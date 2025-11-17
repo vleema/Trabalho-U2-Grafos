@@ -20,3 +20,5 @@ target/
 *.ps
 *.lot
 *.lof
+*.lol
+_minted/

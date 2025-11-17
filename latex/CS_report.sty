@@ -67,41 +67,28 @@
 %% Algorithms/Code Listing environment settings  -
 %% Please do not change these settings
 %%-------------------------------------
-\usepackage{listings-rust}
-\renewcommand{\lstlistingname}{Código}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \renewcommand{\algorithmicrequire}{\textbf{Entrada}}
 \renewcommand{\algorithmicensure}{\textbf{Saída}}
 \usepackage[utf8]{inputenc}
-\usepackage{listings}
 \usepackage{xcolor}
 \definecolor{codegreen}{rgb}{0,0.6,0.1}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codeblue}{rgb}{0.10,0.00,1.00}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
 \definecolor{backcolour}{rgb}{1.0,1.0,1.0}
-
-\lstdefinestyle{mystyle}{
-  backgroundcolor=\color{backcolour},
-  commentstyle=\color{codegreen},
-  keywordstyle=\color{codeblue},
-  numberstyle=\tiny\color{codegray},
-  stringstyle=\color{codepurple},
-  basicstyle=\ttfamily\footnotesize,
-  breakatwhitespace=false,
+\usepackage{newfloat}
+\usepackage{listings}
+\usepackage[chapter]{minted}
+\setminted{
+  linenos,
+  fontsize=\small,
   breaklines=true,
-  captionpos=b,
-  keepspaces=true,
-  numbers=left,
-  numbersep=5pt,
-  showspaces=false,
-  showstringspaces=false,
-  showtabs=false,
-  tabsize=2,
-  frame=none
+  frame=single
 }
-\lstset{style=mystyle}
+\renewcommand{\listingscaption}{Código}
+\renewcommand{\listoflistingscaption}{Lista de Códigos}
 
 %%-------------------------------------
 %% Graphics/Figures environment settings
